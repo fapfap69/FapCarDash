@@ -1,0 +1,119 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          GPIOshutdown
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: check if GPIO is low and shutdown the system
+# Description:       check if GPIO is low and shutdown the system
+### END INIT INFO
+ 
+# Author: Willem Aandewiel (Willem@Aandewiel.nl)
+# Modified by A.Franco
+# ver 0.1  18/10/2013
+ 
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="check GPIO input for LOW and halt the system"
+NAME=GPIOShutdown
+DAEMON=/usr/local/bin/${NAME}.sh
+DAEMON_ARGS=""
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+ 
+# Esci se il package non e' istallato
+[ -x "$DAEMON" ] || exit 0
+
+# --- caricamento librerie et all. 
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+ # Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+ 
+ 
+
+# Funzione di avvio del demone
+do_start()
+{
+    # Parametro di ritorno
+    #   0 se il demone e' stato avviato : OK !
+    #   1 se il demone sta gia' girando ": Good !
+    #   2 se il demone non puo' essere eseguito : BAD !
+    start-stop-daemon --start --quiet --background --pidfile $PIDFILE --nicelevel 19 --exec $DAEMON --test > /dev/null \
+        || return 1
+    start-stop-daemon --start --quiet --background --pidfile $PIDFILE --nicelevel 19 --exec $DAEMON -- \
+        || return 2
+}
+# ------------------------
+ 
+# Funzione di arresto del demone
+do_stop()
+{
+    # Parametro di ritorno
+    #   0 se il demone e' stato arrestato : OK !
+    #   1 se il demone non sta gia' girando ": Good !
+    #   2 se il demone non puo' essere arrestato : BAD !
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+    RETVAL="$?"
+    [ "$RETVAL" = 2 ] && return 2
+    # ferma gli eventuali figli prodotti in fork ... non ci dovrebbero essere
+    start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+    [ "$?" = 2 ] && return 2
+    # ed infine cancella il PID prima di uscire
+    rm -f $PIDFILE
+    return "$RETVAL"
+}
+# ------------------------
+
+#  ----- Main program -------------------- 
+case "$1" in
+  start)
+    [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+    do_start
+    case "$?" in
+        0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+        2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+    esac
+    ;;
+  stop)
+    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+    do_stop
+    case "$?" in
+        0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+        2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+    esac
+    ;;
+  status)
+    status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+    ;;
+  restart)
+    #
+    # If the "reload" option is implemented then remove the
+    # 'force-reload' alias
+    #
+    log_daemon_msg "Restarting $DESC" "$NAME"
+    do_stop
+    case "$?" in
+      0|1)
+        do_start
+        case "$?" in
+            0) log_end_msg 0 ;;
+            1) log_end_msg 1 ;; # Old process is still running
+            *) log_end_msg 1 ;; # Failed to start
+        esac
+        ;;
+      *)
+        # Failed to stop
+        log_end_msg 1
+        ;;
+    esac
+    ;;
+  *)
+    echo "Usage: $SCRIPTNAME {start|stop|status|restart}" >&2
+    exit 3
+    ;;
+esac
+:

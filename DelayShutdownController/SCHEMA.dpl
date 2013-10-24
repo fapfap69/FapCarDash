@@ -1,0 +1,32 @@
+<Qucs Schematic 0.0.17>
+<Properties>
+  <View=149,-494,1480,1014,1,0,0>
+  <Grid=10,10,0>
+  <DataSet=SCHEMA.dat>
+  <DataDisplay=SCHEMA.sch>
+  <OpenDisplay=1>
+  <Script=SCHEMA.m>
+  <RunScript=0>
+  <showFrame=0>
+  <FrameText0=Titolo>
+  <FrameText1=Disegnato da:>
+  <FrameText2=Data:>
+  <FrameText3=Versione:>
+</Properties>
+<Symbol>
+</Symbol>
+<Components>
+</Components>
+<Wires>
+</Wires>
+<Diagrams>
+  <Rect 236 21 728 467 3 #c0c0c0 1 00 1 0 10 140 1 -0.316167 0.5 3.5 1 -1 0.2 1 315 0 225 "" "" "">
+	<"PowerFail.Vt" #0000ff 0 3 0 0 0>
+	<"Gate.Vt" #ff0600 0 3 0 0 0>
+	<"LoadVoltage.Vt" #2f6637 0 3 0 0 0>
+	<"BatteryCurrent.It" #ff0cf0 0 3 0 0 1>
+	<"LoadCurrent.It" #0090a9 0 3 0 0 1>
+  </Rect>
+</Diagrams>
+<Paintings>
+</Paintings>
