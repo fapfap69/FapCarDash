@@ -14,6 +14,7 @@ var port = 8000;
 var indexPage = 'fapcardashfe.html'; // the main page splashscreen
 var localBaseDir = __dirname + '/Web' ;
 var interProcessExchangeFile = __dirname + '/exchange.xml';
+var itemsXMLFileDescriptor = __dirname + '/itemsDefinition.xml';
 
 
 // define globals variables
@@ -28,6 +29,16 @@ var controlIOSocket; // This is the io socket that partecipate the game
 
 // creating the server 
 webServer.listen(port);
+
+// -----  connect with the Redis DB ---------
+redisClient = redis.createClient();
+
+// ----- subscribe to DB items
+subscribeToPushServer(itemsXMLFileDescriptor);
+
+// -------------  End of main program -----------------------------
+
+
 
 // Function that react request from web client
 function onRequest(req, res) {
@@ -109,10 +120,7 @@ function onXMLfileChange(curr, prev) {
 	}
 // ------------------------------------------
 
-// -----  connect with the Redis DB ---------
-redisClient = redis.createClient();
-
-// and define the function that react to messages... 
+// define the function that react to messages... 
 redisClient.client1.on("message", function (channel, message) {
 
     if(isDebug) console.log("RedisClient ::= message from channel " + channel + ": " + message);
@@ -130,15 +138,28 @@ redisClient.client1.on("message", function (channel, message) {
 redisClient.on('subscribe', function (channel,count) {
 	if(isDebug) console.log("RedisClient ::= subscribed >" + channel + " -- " + count);
 	});
+// --------------------------------------------
 
-// ==========================================	
-client1.incr("pip e peppo ");
-    client1.subscribe("gauge1");
-    client1.subscribe("gauge2");
-    client1.subscribe("gauge3");
-    client1.subscribe("gauge4");
+// Subscribe all the Items defined into the XML file
+function subscribeToPushServer(fileName) {
+	//redisClient.incr("pip e peppo ");
 	
-	console.log("Connect & Subscribe to the Redis Server");
-// ============================================
+    fs.readFile(fileName, function(err, data) {
+	    if (err) throw err;
+    	// parsing the xml items definition and converting them into js Object
+    	Object itemsList = parser.toJson(data, {object:true});
+		var key;
+		
+		for (key in itemsList) {
+        	if (itemsList.hasOwnProperty(key)) {
+        		redisClient.subscribe(itemsList[key]);
+        		};
+    		}
+		});
+	if(isDebug) console.log("subscribeToPushServer ::= Connect & Subscribe to the Redis Server");
+	}
+// ---------------------------------------------
+	
+	
 // -------------  EOF ---------------------------------
 
