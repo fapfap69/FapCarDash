@@ -82,8 +82,6 @@
 							<builder buildPath="${workspace_loc:/FCDcollector}/Release" id="cdt.managedbuild.target.gnu.builder.macosx.exe.release.143444579" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.release"/>
 							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release.2049465244" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release">
 								<option id="macosx.c.link.option.libs.1988676051" name="Libraries (-l)" superClass="macosx.c.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="/Users/fap/googleDrive/Progetti/FapCarDash/RaspberryPi/FDCcollector/libgps.a"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="/Users/fap/googleDrive/Progetti/FapCarDash/RaspberryPi/FDCcollector/libhiredis.a"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="gps"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="hiredis"/>
 								</option>

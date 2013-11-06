@@ -25,6 +25,8 @@
 #include <stdbool.h>
 #include <time.h>
 #include <signal.h>
+#include <fcntl.h>			//Used for UART
+#include <termios.h>		//Used for UART
 
 #include "Includes/hiredis.h"
 
@@ -64,19 +66,37 @@ typedef struct sensorMeasure {
 
 
 // GPSD definitions DEFAULT_GPSD_PORT
-#define GPSD_SERVERPORT "localhost:2947"
+#define FCD_GPSD_SERVERPORT "localhost:2947"
+#define FCD_GPSWAITINGTIMEOUT 500
+
+
+#define FCD_ARDU_WRITEATTEMPT 3
+#define FCD_ARDU_RXBUFFERLEN 256
+#define FCD_ARDU_VALUESDELIMITER ','
+#define FCD_ARDU_STATE_IDLE 0
+#define FCD_ARDU_STATE_WAITREPLACE 1
 
 
 // functions prototype
+int arduinoOpenStream(void);
+int arduinoCloseStream(void);
 int arduinoCollectData(void);
+int arduinoWriteCommand(char *);
+int arduinoReceiveResponse(char *);
+
+int gpsdOpenStream(void);
+int gpsdCloseStream(void);
 int GPScollectData(void);
 
 int __recordIntValue(int, char *);
 int __recordFloatValue(float, char *);
 int __recordStringValue(char *, char *);
-int __recordParseValue(char **, char *);
+int __recordParseValue(char **, const char *);
 
-static void quit_handler(int);
+static void _fcdCBSignalHandler(int);
+void fcdLog(char *);
+void fcdLogErr(char *, char *);
+void fcdSplash(void);
 
 #endif
 
