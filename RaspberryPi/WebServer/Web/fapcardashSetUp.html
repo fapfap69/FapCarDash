@@ -1,0 +1,155 @@
+<!doctype HTML>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>Fap Dash Home Page</title>
+	<link rel=stylesheet href=css/dashstyle.css type=text/css charset=utf-8>
+	<script src="js/jquery-1.10.2.min.js"></script>
+
+ 	<script src="socket.io/socket.io.js"></script>
+
+	
+	<script type="text/javascript">
+	
+	var ParametersId = [];
+	var SocketIo;
+	
+	function loadParams() {
+		SocketIo = io.connect();
+		SocketIo.on('connect', function() {
+			
+			SocketIo.emit('getparams','setup');
+			console.log("make request");
+			return;
+			});
+
+		SocketIo.on('parameters', function(data) {
+				var obj = JSON.parse(data);
+				var i, name, value;
+				var tag = "#";
+				var id;
+
+				for(i=0;i<obj.paramArray.length;i++) {
+					name = obj.paramArray[i].name;
+					value = obj.paramArray[i].value;
+					id = tag.concat(name)
+					$(id).text(value);
+					ParametersId.push(name);
+				}
+			});
+		return;
+	}
+	
+	function saveParams() {
+		console.log("SaveParam");			
+		var tag = "#";
+		var id;
+			
+		for(var i=0;i<ParametersId.length;i++){
+			id = tag.concat(ParametersId[i]);
+			var Param = new Object();
+			Param.name = ParametersId[i];
+			Param.value = $(id).val();
+			SocketIo.emit('setparam',JSON.stringify(Param));
+			console.log(">> Save param > %s := %s", Param.name, Param.value);
+			}
+		return;
+	}
+
+	
+	function setRoll(increment) {
+		val = parseInt($("#AlarmRoll").text());
+		val = val + increment;
+		$("#AlarmRoll").text(val);
+		return;	
+	}
+	function setPitch(increment) {
+		val = parseInt($("#AlarmPitch").text());
+		val = val + increment;
+		$("#AlarmPitch").text(val);
+		return;	
+	}
+	function setQuota(increment) {
+		val = parseInt($("#BaseAltimeter").text());
+		val = val + increment;
+		$("#BaseAltimeter").text(val);
+		return;	
+	}
+	
+	</script>	
+</head>
+<body class='fapdashSetup' onload='loadParams();'>
+
+	<aside id="menuHome" class="menuMain">
+		<button id="but1" class="menuButton" onclick="location.href='fapcardashHome.html'">Home</button>
+		<button id="but2" class="menuButton" onclick="loadParams();">Reload</button>
+		<button id="but3" class="menuButton" onclick="saveParams();">Save</button>
+		<button id="but4" class="menuButton"></button>
+		<button id="but5" class="menuButton"></button>
+		<button id="but6" class="menuButton"></button>
+	</aside>		
+	<section id="dashSetUp" class="fapdashSetup">
+	
+    <table class='fapdashSetup'>
+        <tr>
+            <td ><P class='fapdashSetupL1'>CLINOMETER</P></td>
+            <td ><P class='fapdashSetupL2'>Roll alarm</button></td>
+            <td ><button id="MROLL" class="fapdashIncrButton" onclick="setRoll(-1);">-</button></td>
+            <td ><P id="AlarmRoll"  class='fapdashSetupVal'>23</P></td>
+            <td ><button id="PROLL" class="fapdashIncrButton" onclick="setRoll(+1);">+</button></td>
+
+            <td ><P class='fapdashSetupL2'>Pitch alarm</button></td>
+            <td ><button id="MPITCH" class="fapdashIncrButton" onclick="setPitch(-1);">-</button></td>
+            <td ><P id="AlarmPitch"  class='fapdashSetupVal'>23</P></td>
+            <td ><button id="PPITCH" class="fapdashIncrButton" onclick="setPitch(+1);">+</button></td>
+        </tr>
+        
+        <tr> 
+            <td ><P class='fapdashSetupL1'>CLINOMETER</P></td>
+        	 <td colspan="3"><button id="ZERO" class="fapdashButton" onclick="setZeroClinometer();">ZERO SET</button></td>
+		</tr>
+        <tr>
+            <td ><P class='fapdashSetupL1'>ALTIMETER</P></td>
+            <td ><P class='fapdashSetupL2'>Quota (mt)</P></td>
+            <td ><button id="MQUOTA" class="fapdashIncrButton" onclick="setQuota(-1);">-</button></td>
+            <td ><P id="BaseAltimeter"  class='fapdashSetupVal'>23</P></td>
+            <td ><button id="PQUOTA" class="fapdashIncrButton" onclick="setQuota(+1);">+</button></td>
+        </tr>
+
+		<tr>
+			<td><P class='fapdashSetupL1'>METEO</P></td>
+			<td><P class='fapdashSetupL2'>1st Locality</P></td>
+			<td colspan="3"><input id="Meteo1Name"></td>
+			<td colspan="3"><input id="Meteo1Id"></td>
+		</tr>
+		<tr>
+			<td><P class='fapdashSetupL1'></P></td>
+			<td><P class='fapdashSetupL2'>2nd Locality</P></td>
+			<td colspan="3"><input id="Meteo2Name"></td>
+			<td colspan="3"><input id="Meteo2Id"></td>
+		</tr>
+		<tr>
+			<td><P class='fapdashSetupL1'></P></td>
+			<td><P class='fapdashSetupL2'>3th Locality</P></td>
+			<td colspan="3"><input id="Meteo3Name"></td>
+			<td colspan="3"><input id="Meteo3Id"></td>
+		</tr>
+		<tr>
+			<td><P class='fapdashSetupL1'></P></td>
+			<td><P class='fapdashSetupL2'>4th Locality</P></td>
+			<td colspan="3"><input id="Meteo4Name"></td>
+			<td colspan="3"><input id="Meteo4Id"></td>
+		</tr>
+		<tr>
+			<td><P class='fapdashSetupL1'></P></td>
+			<td><P class='fapdashSetupL2'>5th Locality</P></td>
+			<td colspan="3"><input id="Meteo5Name"></td>
+			<td colspan="3"><input id="Meteo5Id"></td>
+		</tr>
+    </table>
+   
+    </section>
+    
+    
+</body>
+<html>

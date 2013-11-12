@@ -1,0 +1,143 @@
+<!doctype HTML>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>Fap Dash Meteo Page</title>
+	<link rel=stylesheet href=css/dashstyle.css type=text/css charset=utf-8>
+	<script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
+	<script src="js/jquery.zweatherfeed.min.js" type="text/javascript"></script>	
+ 	<script src="socket.io/socket.io.js"></script>
+
+	<script type="text/javascript">	
+	/*  -------------------------------------------------------------------
+		Extablish a connection with the server, obtains the list of
+		parameters, extract the Meteo Sites specification and set 
+		the Push Buttons 
+	*/
+	var LocalitId = ["","","","",""];  // contains the Names of sites
+	var LocalitName = ["","","","",""];  // COntains the Internatin Code for Meteo-Sites
+	var SocketIo;
+	function loadParams() {
+		SocketIo = io.connect();
+		SocketIo.on('connect', function() {
+			SocketIo.emit('getparams','setup');   // after the socket connection make a parm request
+			return;
+			});
+
+		SocketIo.on('parameters', function(data) {   // as soon the server replays read the params
+				var obj = JSON.parse(data); 
+				var i, name, value, pos;
+				var tag = "#";
+				var id;
+
+				for(i=0;i<obj.paramArray.length;i++) {  // for each param ...
+					name = obj.paramArray[i].name;
+					value = obj.paramArray[i].value;
+					if( name.search("Meteo") >= 0) {  // It is a Meteo Param
+						id = parseInt(name.substring(5,6));  // extract the index of the array
+						if( name.search("Id") >= 0) {   // Is an Id or the Name ?
+							LocalitId[id-1] = value; 
+							} else {
+							LocalitName[id-1] = value;
+							}
+						}
+					}
+				// Set the push buttons label
+				$("#fun1").text(LocalitName[0]);
+				$("#fun2").text(LocalitName[1]);
+				$("#fun3").text(LocalitName[2]);
+				$("#fun4").text(LocalitName[3]);
+				$("#fun5").text(LocalitName[4]);
+				// end of job...
+				SocketIo.disconnect();
+			});
+		return;
+	}
+	
+	/*  -------------------------------------------------------------------
+		Loads the Meteo page setting the Meteo-site ID in the Url of the page
+	*/
+	function loadPage(pageNum){
+		if( LocalitId[pageNum] != "") {
+			var Url = "fapcardashMeteo.html?site=" + LocalitId[pageNum];
+			window.location = Url;
+		}
+		return;
+	}
+	</script>
+	
+	<script type="text/javascript">
+	/*  --------------------------------------------------------------------
+		This function set the entire window with a Weather forecast widjet
+		I copied it as it is ...
+		with some variations
+	*/
+		$(document).ready(function () {
+			var idSite;
+			// extract the Site-Id from the Url
+			var postline = window.location.search.substring(1);
+			var parms = postline.split('&');
+			for (var i=0; i<parms.length; i++) {
+				var pos = parms[i].indexOf('=');
+				if (pos > 0) {
+					var key = parms[i].substring(0,pos);
+					var val = parms[i].substring(pos+1);
+					if(key == 'site') {
+						idSite = val;
+					}			
+				}
+			}
+			
+			console.log('fapCarDash Meteo Page ::= Find site id:', idSite);
+			// The setta il tag #test
+			$('#test').weatherfeed([idSite],{
+				unit: 'c',
+				image: true,
+				country: true,
+				highlow: true,
+				wind: true,
+				humidity: true,
+				visibility: true,
+				sunrise: true,
+				sunset: true,
+				forecast: true,
+				link: false
+				});
+			});
+	</script>
+
+	<style type="text/css">
+	body {
+		margin: 1em 3em;
+		font-family: Tahoma, Genevam, sans-serif;
+		background: #EEEEEE;
+	}
+	.weatherFeed { width: 650px; height: 416px; background: #FFFFFF; padding: 20px 20px 20px 20px; 
+	    display: block; 
+	    position: fixed;
+    	top: 0px;
+    	left: 111px;
+		right: auto;
+	}
+	.weatherItem { width: 600px; height: 210px; background-position: right center; }
+	.weatherCity {  font-size: 2em; }	
+	.weatherForecast { height: 206px; background: #FFFFFF; }
+	.weatherForecastItem { float: left; margin: 1em 2em 1em 0; padding-right: 3em; background-position: right; font-size: 0.9em; }
+	</style>
+
+</head>
+
+<body onload="loadParams()">
+	<div class="pageMeteo">
+		<aside id="menuHome" class="menuMain">
+		<button id="but1" class="menuButton" onclick="location.href='fapcardashHome.html'">Home</button>
+		<button id="fun1" class="menuButton" onclick="loadPage(0)"></button>
+		<button id="fun2" class="menuButton" onclick="loadPage(1)"></button>
+		<button id="fun3" class="menuButton" onclick="loadPage(2)"></button>
+		<button id="fun4" class="menuButton" onclick="loadPage(3)"></button>
+		<button id="fun5" class="menuButton" onclick="loadPage(4)"></button>
+	</aside>
+	<div id="test"></div>
+ 	</div>
+ </body>
+<html>

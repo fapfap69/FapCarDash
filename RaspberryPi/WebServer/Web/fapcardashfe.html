@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" >
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<title>FapCarDash frontEnd</title>
+		<meta name="FapCarDashFE" content="Car Puter front End" />
+		<meta name="keywords" content="Carputer, frontend, DIY, rapsberry" />
+		<meta name="author" content="inFrAnto" />
+		<link rel="shortcut icon" href="../favicon.ico"> 
+		<link rel="stylesheet" href="css/dashstyle.css" type="text/css">		
+		<link rel="stylesheet" type="text/css" href="css/dashdefault.css" />
+		<link rel="stylesheet" type="text/css" href="css/dashcomponent.css" />
+		<link rel="stylesheet" type="text/css" href="css/dashanimations.css" />
+		<script src="js/modernizr.custom.js"></script>
+		<script src="js/jquery-1.10.2.min.js"></script>
+ 		<script src="socket.io/socket.io.js"></script>
+      
+		<script type="text/javascript">
+			var server = self.location.protocol + '://' + self.location.host;
+			var socket = io.connect();//, {'transports' : ['jsonp-polling']});
+			
+			socket.on('connect', function() {
+				// enable all the buttons console.log(">>>> connected");
+				var color = "Yellow";
+				var elem;
+				elem = document.getElementById("IOstate");
+				elem.style.color = color;
+				elem = document.getElementById("GPSstate");
+				elem.style.color = color;
+				elem = document.getElementById("ODBIIstate");
+				elem.style.color = color;
+				elem = document.getElementById("WIFIstate");
+				elem.style.color = color;
+				elem = document.getElementById("GSMstate");
+				elem.style.color = color;
+				return;
+				});
+
+			socket.on('disconnect', function() {
+				// disable all the butthons console.log(">>>> DISCONNECT ");				
+				var color = "Gray";
+				var elem;
+				elem = document.getElementById("IOstate");
+				elem.style.color = color;
+				elem = document.getElementById("GPSstate");
+				elem.style.color = color;
+				elem = document.getElementById("ODBIIstate");
+				elem.style.color = color;
+				elem = document.getElementById("WIFIstate");
+				elem.style.color = color;
+				elem = document.getElementById("GSMstate");
+				elem.style.color = color;
+				return;
+				});
+
+			socket.on('message', function(mes) {
+				console.log(">>>> Message %s",msg);				
+			});
+			
+  			socket.on('notification', function (jsonstring) {			
+	  			var obj = JSON.parse(jsonstring);
+//	  			console.log(">>>>> obj  %",jsonstring);
+				switch(obj.channel) {
+				case "Temp1":
+			//		if(document.getElementById('dashFrame').location.pathname == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Termometer1.setValueAnimated(obj.message);
+					break;
+				case "Temp2":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Termometer2.setValueAnimated(obj.message);
+					break;
+				case "Humid":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Higrometer.setValueAnimated(obj.message);
+					break;
+				case "Pressure":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Barometer.setValueAnimated(obj.message);
+					break;
+				case "Altitude":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Altimeter.setValueAnimated(obj.message);
+					break;
+				case "Compass":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")	
+						document.getElementById('dashFrame').contentWindow.Compass.setValueAnimated(obj.message);
+					break;
+				case "GeoNorth":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+				//		document.getElementById('dashFrame').contentWindow.Compass2.setValueAnimated(obj.message);
+					break;
+				case "Roll":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Roll.setValueAnimated(obj.message);
+					break;
+				case "Pitch":
+			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+						document.getElementById('dashFrame').contentWindow.Pitch.setValueAnimated(obj.message);
+					break;
+
+					
+				case "arduinoState":
+					var elem = document.getElementById("IOstate");
+					var color = "Gray";
+					switch(obj.message) {
+					case "OK":
+						color = "Green";
+						break;
+					case "NO LINK":
+						color = "Yellow";
+						break;
+					case "ERROR":
+						color = "Red";
+						break;
+					}
+					elem.style.color = color;
+					break;
+
+				case "GPSstatus":
+					var elem = document.getElementById("GPSstate");
+					var color = "Gray";
+					switch(obj.message) {
+					case "LINK":
+						color = "Blue";
+						break;
+					case "NO LINK":
+						color = "Red";
+						break;
+					case "FIXED":
+						color = "Green";
+						break;
+					case "FIXING":
+						color = "Blue";
+						break;
+					case "OFFLINE":
+						color = "Yellow";
+						break;
+					case "NODATA":
+						color = "Orange";
+						break;
+					case "NODEVICE":
+						color = "Gray";
+						break;
+					}
+					elem.style.color = color;
+					break;
+					
+					
+				case "GPSlatit":
+					document.getElementById('dashFrame').contentWindow.newLatitude(obj.message);
+					break;
+					
+				case "GPSlongi":
+					document.getElementById('dashFrame').contentWindow.newLongitude(obj.message);
+					break;
+					
+
+					
+					
+					
+					
+					
+/*					<item>Devpoint</item>
+					<item>PressureSL</item>
+					<item>Batt1V</item>
+					<item>Batt1A</item>
+					<item>Batt2V</item>
+					<item>Batt2A</item>
+					
+					<item>GPStime</item>
+					<item>GPSlatit</item>
+					<item>GPSlongi</item>
+					<item>GPSaltit</item>
+					<item>GPSclimb</item>
+					<item>GPSspeed</item>
+					<item>GPStrack</item>
+*/					
+					}
+  				});
+			
+			function frameDidLoad() {
+    			//alert('Frame did load !');
+    			//console.log( 'Frame is loaded');
+    			return;
+			}
+			function init() {
+				// Starts the game with the Home Page
+				document.getElementById('dashFrame').src = "fapcardashHome.html";
+				return;		
+			}
+			
+			function requestParam(name, value) {
+				console.log("Eureka !!! %s",name);
+				value = 'pippo';
+				return;
+				
+			} 
+			
+			
+			
+		</script>
+	</head>
+
+	<body id="bodyHome" class="bodyMain" onload=init()>
+		<header id="headerHome" class="headerMain">
+			<button id="GPSstate" class="headerIcon">GPS</button>
+			<button id="ODBIIstate" class="headerIcon">ODBII</button>
+			<button id="WIFIstate" class="headerIcon">WIFI</button>
+			<button id="GSMstate" class="headerIcon">GSM</button>
+			<button id="IOstate" class="headerIcon">I/O</button>
+		</heder>
+		<section id="dashFrameSection">
+			<iframe id="dashFrame" class="dashFrame" onLoad="frameDidLoad();"></iframe>			
+		</section>
+	</body>
+</html>
+

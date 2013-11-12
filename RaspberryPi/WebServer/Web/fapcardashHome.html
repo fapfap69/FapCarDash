@@ -1,0 +1,87 @@
+<!doctype HTML>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>Fap Dash Home Page</title>
+	<link rel=stylesheet href=css/dashstyle.css type=text/css charset=utf-8>
+	
+	<script type="text/javascript">
+
+	function loadPage(name) {
+		var Url;
+		switch(name) {
+		case 1:
+			Url = "fapcardashHome.html";
+			break;
+		case 2:
+			Url = "fapcardashInstr.html";
+			break;
+		case 3:
+			Url = "fapcardashInstr2.html";
+			break;
+		case 4:
+			Url = "fapcardashMaps.html";
+			break;
+    	}
+		window.location = Url;
+//		document.getElementById('dashFrame').src = Url;
+		return;
+	}
+	</script>	
+</head>
+<body class='fapdashHome'>
+
+	<aside id="menuHome" class="menuMain">
+		<button id="but1" class="menuButton" onclick="loadPage(1);">Home</button>
+		<button id="but2" class="menuButton" onclick="loadPage(2);">Dash</button>
+		<button id="but3" class="menuButton" onclick="loadPage(3);">Dash2</button>
+		<button id="but4" class="menuButton" onclick="loadPage(4);">Maps</button>
+		<button id="but5" class="menuButton"></button>
+		<button id="but6" class="menuButton"></button>
+	</aside>		
+	<section id="dashHome" class="fapdashHome">
+    <table class='fapdashHome'>
+        <tr class='fapdashHome'>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but1" class="fapdashHome" onclick="location.href='fapcardashMeteo.html?site=ITXX0003'">
+	  			<img src="images/MeteoIcon.png" width="140px" height="70px" alt="METEO"/></button>
+            </td>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but1" class="fapdashHome">First</button>
+            </td>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but1" class="fapdashHome">First</button>
+            </td>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but1" class="fapdashHome">First</button>
+            </td>
+        </tr>
+        <tr class='fapdashHome'>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but2" class="fapdashHome">Second</button>
+            </td>
+            <td width=20% class='fapdashHome'>
+            </td>
+            <td width=20% class='fapdashHome'>
+            </td>
+            <td width=20% class='fapdashHome'>
+        </tr>
+        <tr class='fapdashHome'>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but2" class="fapdashHome">Second</button>
+            </td>
+            <td width=20% class='fapdashHome'>
+            </td>
+            <td width=20% class='fapdashHome'>
+            </td>
+            <td width=20% class='fapdashHome'>
+	  			<button id="but9" class="fapdashHome" onclick="location.href='fapcardashSetUp.html'">
+	  			<img src="images/SetupIcon.png" width="70px" height="70px" alt="SETUP"/></button>
+            </td>
+        </tr>
+    </table>
+    </section>
+    
+    
+</body>
+<html>

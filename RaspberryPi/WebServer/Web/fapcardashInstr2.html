@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+		<title>Fap cardash Instrumentation page</title>
+		<meta name="description" content="" />
+		<meta name="keywords" content="" />
+		<meta name="author" content="Fap" />
+		<link rel="shortcut icon" href="../favicon.ico"> 
+		<link rel="stylesheet" type="text/css" href="css/dashdefault.css" />
+		<link rel="stylesheet" type="text/css" href="css/multilevelmenu.css" />
+		<link rel="stylesheet" type="text/css" href="css/dashcomponent.css" />
+		<link rel="stylesheet" type="text/css" href="css/dashanimations.css" />
+		<link rel="stylesheet" href="css/dashstyle.css" type="text/css">
+		<script src="js/modernizr.custom.js"></script>
+	</head>
+	<body  onload=init()>	
+
+		<div class="pt-triggers">
+			<button id="nextpage" class="pt-touch-button-right"></button>
+			<button id="prevpage" class="pt-touch-button-left"></button>
+			<div style="bottom:0%; position:absolute; padding-top:5px; padding-left:5px;">
+				<button id="fun1" class="pt-touch-button-f1" onclick=functionButton(1)></button>
+				<button id="fun2" class="pt-touch-button-f2" onclick=functionButton(2)></button>
+				<button id="fun3" class="pt-touch-button-f3" onclick=functionButton(3)></button>
+				<button id="fun4" class="pt-touch-button-f4" onclick=functionButton(4)></button>
+				<button id="fun5" class="pt-touch-button-f5" onclick=functionButton(5)></button> 
+				<button id="fun6" class="pt-touch-button-f6" onclick=functionButton(5)></button> 
+			</div>
+		</div><!-- /triggers -->
+
+		<div id="pt-main" class="pt-perspective">
+			<div class="pt-page pt-page-1">
+				<h2>TEMPO</h2>
+			    <table class="pt-table">
+		    		<tr><td colspan=2 class="pt-table-canvas"><canvas id=canvasDate width=320 height=40>Date Time</canvas></td></tr>
+                    <tr>
+            			<td  class="pt-table-canvas">
+                			<canvas id=canvasClock width=300 height=300>No canvas in your browser...sorry...</canvas>
+			            </td>
+            			<td class="pt-table-canvas">
+	            			<canvas id=canvasCronom width=300 height=300></canvas>
+			            </td>
+        			</tr>
+    			</table>
+    			<div class="pt-footer">
+			    <button id="startCronom" class="pt-footer-button">Start</button>
+			    <button id="stopCronom" class="pt-footer-button">Stop</button>
+			    <button id="resetCronom" class="pt-footer-button">Reset</button>
+			    <button id="lapCronom" class="pt-footer-button">Lap</button>
+				</div>
+			</div>
+			<div class="pt-page pt-page-2">
+				<h2>ENVIRONMENT</h2>
+				
+			    <table class="pt-table">
+		            <tr>
+            			<td  class="pt-table-canvas">
+                			<canvas id=canvasHigrometerDis width=300 height=300>No canvas in your browser...sorry...</canvas>
+			            </td>
+            			<td class="pt-table-canvas">
+	            			<canvas id=canvasTermometer width=300 height=300></canvas>
+			            </td>
+        			</tr>
+    			</table>
+    			<div class="pt-footer">
+				</div>
+			</div>
+			<div class="pt-page pt-page-3">
+				<h2>COMPASS</h2>
+                <div class="pt-table">
+				    <table class="pt-table">
+				        <tr>
+        	    			<td width=50%>
+            	    			<canvas id=canvasCompass2 width=300 height=300>No canvas in your browser...sorry...</canvas>
+			    	        </td>
+            				<td width=50%>
+            					<img id=compasspointer src="images/compassCar.png" style="display: none;">
+	            				<canvas id=canvasCompass width=200 height=200></canvas>
+				            </td>
+    	    			</tr>
+    				</table>
+				</div>
+    			<div class="pt-footer">
+			    <button id="compasCompensation" class="pt-footer-button" style="background-image: url('images/buttFootLeft.png');">Compens</button>
+				</div>
+			</div>
+			<div class="pt-page pt-page-4">
+				<h2>ENVIRONMENT</h2>
+				<div class="pt-table">
+					<table class="pt-table">
+			        	<tr>
+            				<td width=30%>
+                				<canvas id=canvasTermometer2 width=150 height=320>No canvas in your browser...sorry...</canvas>
+			            	</td>
+            				<td width=30%>
+	            				<canvas id=canvasTermometer3 width=150 height=320></canvas>
+			            	</td>
+            				<td width=40%>
+	                			<canvas id=canvasHigrometer width=270 height=270>No canvas in your browser...sorry...</canvas>
+			            	</td>
+        				</tr>
+    				</table>
+    			</div>
+			</div>
+			<div class="pt-page pt-page-5">
+				<h2>ALTIMETER</h2>
+				<div class="pt-table">
+					<table class="pt-table">
+			        	<tr>
+            				<td width=50%>
+                				<canvas id=canvasAltimeter width=270 height=270>No canvas in your browser...sorry...</canvas>
+			            	</td>
+            				<td width=50%>
+	            				<canvas id=canvasRadial4 width=270 height=270></canvas>
+			            	</td>
+        				</tr>
+    				</table>
+    			</div>
+    			<div class="pt-footer">
+			    <button id="altimeterQuotaM" class="pt-footer-button" style="background-image: url('images/buttFootLeft.png');">Quota -</button>
+			    <button id="altimeterQuotaP" class="pt-footer-button" style="background-image: url('images/buttFootRight.png');">Quota +</button>
+				</div>
+			</div>
+			<div class="pt-page pt-page-6">
+				<h2>Titolo pagina 5</h2>
+			</div>
+		</div>
+		<div class="pt-message">
+			<p>Your browser does not support CSS animations.</p>
+		</div>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="js/jquery.dlmenu.js"></script>
+<script src="js/dashpagetransitions.js"></script>
+<script src="js/steelseries.js"></script>
+<script src="js/tween-min.js"></script>
+
+<script>
+	var Roll;
+	var Pitch;
+	var ClinomiterAlarm;
+    var Horizon;
+    var Compass;
+    var Compass2;
+	var radial2;
+	var radial3;
+	var radial4;
+	var Watch;
+	var Cronometro;
+	var Higrometer;
+	var Termometer;
+	var TermometerLinear;
+
+
+function init(){
+
+		// Define the general style		
+		var FrameStyle = steelseries.FrameDesign.ANTHRACITE;
+		var BackgroundStyle = steelseries.BackgroundColor.BEIGE;
+		var PointerStyle =  steelseries.PointerType.TYPE1;
+		var PointerColor = steelseries.ColorDef.BLACK;
+		var ForegroundStyle = steelseries.ForegroundType.TYPE4;
+		
+		
+		// Define some sections
+        var voltSections = Array(steelseries.Section(10, 12, 'rgba(220, 0, 0, 0.3)'),
+                             steelseries.Section(12, 13, 'rgba(220, 220, 0, 0.3)'),
+                             steelseries.Section(13, 14.9, 'rgba(0, 220, 0, 0.3)'));
+        var atmoSections = Array(steelseries.Section(860, 935, 'rgba(0, 0, 220, 0.3)'),
+                             steelseries.Section(935, 1010, 'rgba(220, 220, 0, 0.3)'),
+                             steelseries.Section(1010, 1080, 'rgba(220, 0, 0, 0.3)'));
+
+		// Define one area
+        var areas = Array(steelseries.Section(75, 100, 'rgba(220, 0, 0, 0.3)'));
+
+
+		// Initialzing gauge
+	
+        DateTime = new steelseries.DisplaySingle('canvasDate', {
+                                         lcdColor: steelseries.LcdColor.STANDARD,
+                                         lcdDecimals: 0,
+                                         unitString: '',
+                                         unitStringVisible: false,
+                                         headerString: '',
+                                         headerStringVisible: false,
+                                         digitalFont: false,
+                                         valuesNumeric: false,
+                                         value: 'Mer 13 Settembre 2013 ',
+                                         alwaysScroll: false,
+                                         autoScroll: false,
+                                         section: null
+                                         });
+
+
+		Watch = new steelseries.Clock('canvasClock', {
+							frameDesign: FrameStyle,
+                            frameVisible: true,
+                            backgroundColor: BackgroundStyle,
+                            backgroundVisible: true,
+                            pointerColor: PointerColor,
+                            foregroundType: ForegroundStyle,
+                            foregroundVisible: true,
+                            pointerType: PointerStyle
+                            
+							});
+		Cronometro = new steelseries.StopWatch('canvasCronom', {
+				            backgroundColor: BackgroundStyle,
+            				backgroundVisible: true,
+							frameDesign: FrameStyle,
+                            frameVisible: true,
+                            foregroundType: ForegroundStyle,
+                            foregroundVisible: true,
+                            pointerColor: PointerColor,
+                            pointerType: PointerStyle
+                            });
+							
+/*        Horizon = new steelseries.Horizon('canvasHorizon', {
+                              size: 300,
+                              decimalVisible: true,
+                              textOrientationFixed: false,
+                              frameDesign: steelseries.FrameDesign.BLACK_METAL,
+                              frameVisible: true,
+                              backgroundColor: steelseries.BackgroundColor.DARK_GRAY,
+                              backgroundVisible: true,
+                              pointerColor: steelseries.ColorDef.RED,
+                              foregroundType: steelseries.ForegroundType.TYPE1,
+                              foregroundVisible: true,
+                              rotateFace: true,
+                              titleString: 'Pitch',
+                              unitString: 'Degre',
+                              threshold: 50
+                              });
+*/
+        Compass = new steelseries.Compass('canvasCompass', {
+                                  size: 300,
+                                  frameDesign: FrameStyle,
+                                  frameVisible: true,
+                                  backgroundColor: BackgroundStyle,
+                                  backgroundVisible: true,
+                                  pointerType: steelseries.PointerType.TYPE4,
+                                  pointerColor: PointerColor,
+                                  foregroundType: ForegroundStyle,
+                                  foregroundVisible: true,
+                                  knobType: steelseries.KnobType.NO_KNOB,
+                                  pointSymbols: ["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+                                  customLayer: null,
+                                  degreeScale: true,
+                                  roseVisible: false,
+                                  customPointer: "compasspointer",
+                                  rotateFace: true
+                                  });
+
+        Compass2 = new steelseries.DisplayCompass('canvasCompass2', {
+    						      frameDesign: FrameStyle,
+                                  frameVisible: true,
+                                  backgroundColor: BackgroundStyle,
+                                  backgroundVisible: true,
+    						      radial: true
+   								 });
+         
+            
+        Altimeter = new steelseries.Altimeter('canvasAltimeter', {
+                                frameDesign: FrameStyle,
+                                frameVisible: true,
+                                backgroundColor: BackgroundStyle,
+                                backgroundVisible: true,
+                                pointerColor: PointerColor,
+                                lcdVisible: true,
+                                foregroundType: ForegroundStyle,
+                                foregroundVisible: true,
+                                unitScale: 10
+                                 });
+
+   
+	    radial4 = new steelseries.Radial('canvasRadial4', {
+                            gaugeType: steelseries.GaugeType.TYPE4,
+                            section: atmoSections,
+                            titleString: "Atmospheric Pressure",
+                            unitString: "hPas",
+                            minValue: 860,
+                            maxValue: 1080,
+                            niceScale: false,
+                            threshold: 50,
+                            ledVisible: false,
+                            lcdVisible: true,
+                            lcdDecimals: 1,
+                            frameDesign: FrameStyle,
+                            frameVisible: true,
+                            backgroundColor: BackgroundStyle,
+                            backgroundVisible: true,
+                            pointerType: PointerStyle,
+                            pointerColor: PointerColor,
+                            foregroundType: ForegroundStyle,
+                            foregroundVisible: true,
+                            thresholdVisible: false
+                           });
+	    
+	    Higrometer = new steelseries.Radial('canvasHigrometer', {
+            	gaugeType: steelseries.GaugeType.TYPE4,
+	            titleString: "Humidity",
+            	unitString: "%",
+            	minValue: 0,
+            	maxValue: 100,
+           		niceScale: true,
+       		    lcdVisible: false,
+       		    ledVisible: false,
+            	lcdDecimals: 0,
+            	frameDesign: FrameStyle,
+            	frameVisible: true,
+            	backgroundColor: BackgroundStyle,
+            	backgroundVisible: true,
+            	pointerType: PointerStyle,
+            	pointerColor: PointerColor,
+        	    foregroundType: ForegroundStyle,
+            	foregroundVisible: true,
+            	thresholdVisible: false
+           });
+             
+	    Termometer = new steelseries.Radial('canvasTermometer', {
+        	gaugeType: steelseries.GaugeType.TYPE4,
+            titleString: "Inside Temperature",
+        	unitString: "\u00B0C",
+        	minValue: -10,
+        	maxValue: 50,
+       		niceScale: true,
+   		    lcdVisible: false,
+   		    ledVisible: false,
+        	lcdDecimals: 0,
+        	frameDesign: FrameStyle,
+        	frameVisible: true,
+        	backgroundColor: BackgroundStyle,
+        	backgroundVisible: true,
+        	pointerType: PointerStyle,
+        	pointerColor: PointerColor,
+    	    foregroundType: ForegroundStyle,
+        	foregroundVisible: true,
+        	thresholdVisible: false
+       });
+	    
+	    TermometerLinear =  new steelseries.Linear('canvasTermometer2', {
+	    	gaugeType: steelseries.GaugeType.TYPE1,
+            minValue: -10,
+            maxValue: 50,
+			niceScale: true,
+			titleString: 'Inside',
+			unitString: '\u00B0C',
+			frameDesign: FrameStyle,
+			frameVisible: true,
+			backgroundColor: BackgroundStyle,
+			backgroundVisible: true,
+			lcdColor: steelseries.LcdColor.STANDARD,
+			lcdVisible : true,
+			lcdDecimals: 0,
+			ledVisible: false,
+			thresholdVisible: false,
+			foregroundVisible: true
+	    });
+			
+	    TermometerLinear2 =  new steelseries.Linear('canvasTermometer3', {
+	    	gaugeType: steelseries.GaugeType.TYPE1,
+            minValue: -10,
+            maxValue: 50,
+			niceScale: true,
+			titleString: 'Outside',
+			unitString: '\u00B0C',
+			frameDesign: FrameStyle,
+			frameVisible: true,
+			backgroundColor: BackgroundStyle,
+			backgroundVisible: true,
+			lcdColor: steelseries.LcdColor.STANDARD,
+			lcdVisible : true,
+			lcdDecimals: 0,
+			ledVisible: false,
+			thresholdVisible: false,
+			foregroundVisible: true
+	    });
+			
+	}
+
+function functionButton(num) {
+
+	// Detect what page is active now	
+	var $main = $( '#pt-main' ),
+		$pages = $main.children( 'div.pt-page' ),
+		$page,
+		pageNumber =-1
+		counter = 0;
+
+	$pages.each( function() {
+		counter++;
+		$page = $( this );
+		i= $page.attr( 'class' ).search("current");
+		if(i>0) {
+			console.error(" found " + $page.attr( 'class' ) );
+			pageNumber = counter;
+		}
+	} );
+
+	if(pageNumber < 0) return;
+
+	// then select the function associated to the push button	
+	switch(pageNumber) {
+		case 1:  // Time
+			switch(num) {
+				case 1:
+					Cronometro.start();
+					break;
+				case 2:
+					Cronometro.stop();
+					break;
+				case 3:
+					Cronometro.reset();
+					break;
+				case 4:
+					Cronometro.lap();
+					break;
+				default:
+					console.error("Uscito per default ");	
+				}
+			break;
+		case 2:  // clinometer
+			switch(num) {
+				case 1:
+                var v;
+                v = Math.random() * 180.0 -90.0;
+                Roll.setValueAnimated(v);
+                Pitch.setValue( v);
+                               
+					// set 0 to arduino Clinometer.setZero();
+					break;
+				case 2:
+                    Roll.setThreshold ( Roll.getThreshold() -1 );
+					break;
+				case 3:
+                    Roll.setThreshold ( Roll.getThreshold() +1 );
+					break;
+				case 4:
+                    Pitch.setThreshold ( Pitch.getThreshold() -1 );
+					break;
+				case 5:
+                    Pitch.setThreshold ( Pitch.getThreshold() +1 );
+					break;
+				default:
+					console.error("Uscito per default ");	
+				}
+			break;
+		case 3:
+			switch(num) {
+				case 1:
+                var v;
+                v = Math.random() * 360.0 ;
+                Compass.setValueAnimated(v);
+                Compass2.setValueAnimated(v);
+                Higrometer.setValueAnimated(Math.random() * 100.0);
+                TermometerLinear.setValueAnimated(Math.random() * 60.0 - 10);
+                TermometerLinear2.setValueAnimated(Math.random() * 60.0 - 10);
+                Termometer.setValueAnimated(Math.random() * 60.0 - 10);
+					// set the magnetic compensation to arduino Compass.setZero();
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				default:
+					console.error("Uscito per default ");	
+				}
+			break;
+		case 4:
+			break;
+		case 5:
+			switch(num) {
+				case 1:
+                var v;
+                v = Math.random() * 1500.0 - 200.0;
+                Altimeter.setValueAnimated(v);
+                radial4.setValueAnimated(v);
+         			// set the zero quota to arduino Compass.setZero();
+					break;
+				case 2:
+         			// set the zero quota to arduino Compass.setZero();
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				default:
+					console.error("Uscito per default ");	
+				}
+			break;
+		case 6:
+			break;
+		}
+	}
+	
+	
+</script>		
+		
+		
+	</body>
+</html>
