@@ -1,0 +1,135 @@
+<!doctype HTML>
+<html>
+<head>
+	<meta charset=utf-8>
+	<title>Fap Dash Calendar Page</title>
+	<link rel='stylesheet' href='css/dashstyle.css' type='text/css' charset='utf-8'>
+	<link href='css/dashcalendar.css' rel='stylesheet' />
+	<link type="text/css" href="css/ui-darkness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet">		
+	<script src="js/jquery-1.10.2.min.js"></script>
+	<script src="js/jquery-ui-1.10.3.custom.min.js"></script>
+	<script src='js/fullcalendar.min.js'></script>
+	<script src='js/gcal.js'></script>
+
+	<script>
+		$(function() {
+			$("#dialog").dialog({
+				autoOpen: false,
+				resizable: false,
+				width: 400
+			});
+		});
+	
+		function showDialog(evento) {
+			$("#ev_title").text(evento.title);
+			if(evento.allDay) {
+				$("#ev_allday").text("Durata per tutto il giorno");
+				$("#ev_start").text("");
+				$("#ev_end").text("");
+			} else {
+				$("#ev_allday").text("Durata oraria");
+				$("#ev_start").text("Dalle :" + $.fullCalendar.formatDate( evento.start, "HH:mm:ss" ) );
+				$("#ev_end").text("Alle :" + $.fullCalendar.formatDate( evento.end, "HH:mm:ss" ));
+			}
+			$("#dialog").dialog("open");
+		};
+	</script>
+
+
+	<script>
+		$(document).ready(function() {
+			$('#calendar').fullCalendar({	
+				// IT Holidays
+				header: {
+					left: 'prev,next today',
+					center: 'title',
+					right: 'month,agendaWeek,agendaDay'
+				},
+				firstDay: 1,
+				weekMode: 'fixed',
+				aspectRatio: 1.65,
+				editable: true,
+				
+				monthNames: ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio',
+							 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'],
+
+				monthNamesShort: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug',
+							 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+				
+				dayNames : ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'],
+				
+				dayNamesShort: ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'],
+				
+
+				eventSources: [
+				 {
+				 	url: "https://www.google.com/calendar/feeds/it.italian%23holiday%40group.v.calendar.google.com/public/basic",
+				 	color: 'green'
+				 }  ,
+				 {
+				 	url: "https://www.google.com/calendar/feeds/franco.antonio63%40gmail.com/private-b90e1b81034717da601de547a0ca0650/basic",
+				 	color: 'red',
+				 	textColor: 'black'
+				 }]	,
+				  
+				eventClick: function(calEvent, jsEvent, view) {
+					showDialog(calEvent); 
+					return(false); // doesn't execute the external URL
+    				},
+    				
+				loading: function(bool) {
+					if (bool) {
+						$('#loading').show();
+					}else{
+						$('#loading').hide();
+					}
+				}
+			});
+		});
+	</script>
+
+	<style>
+		#loading {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			}
+		#calendar {
+			margin-top: 2px;
+			margin-left: 10px;
+			margin-right: 2px;
+			margin-bottom: 2px;
+			width: 670px;
+			height: 450px;
+			
+			text-align: center;
+			font-size: 16px;
+			font-family: "Arial",Helvetica,Arial,Verdana,sans-serif;
+			
+			background: #FFFFFF;
+			}
+	</style>
+
+
+</head>
+<body class='fapdashCalendar' onload=''>
+	<aside id="menuHome" class="menuMain">
+		<button id="but1" class="menuButton" onclick="location.href='fapcardashHome.html'">Home</button>
+		<button id="but2" class="menuButton"></button>
+		<button id="but3" class="menuButton"></button>
+		<button id="but4" class="menuButton"></button>
+		<button id="but5" class="menuButton"></button>
+		<button id="but6" class="menuButton"></button>
+	</aside>		
+	<section id='calendarSec' class='fapdashCalendar'>
+		<div id='loading' style='display:none'>loading...</div>
+		<div id='calendar'></div>
+	</section>
+	<div id="dialog" title="Appuntamento">
+		<h4 id='ev_title'></h4>
+		<P id='ev_allday'></P>
+		<P id='ev_start'></P>
+		<P id='ev_end'></P>
+	</div>
+</body>
+<html>

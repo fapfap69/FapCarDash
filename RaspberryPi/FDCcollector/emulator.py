@@ -7,12 +7,13 @@ ser = serial.Serial('/dev/ptyp2', 9600, timeout=2)
 flag = 1
 
 while (flag == 1) :
+
 	inputBuf = ser.readline()
-	if(inputBuf == "") :
-		print "."
-	else :
+
+	if(inputBuf != "") :
 		inputBuf = inputBuf[:-1]
-		print "Receive >%s< \n" % (inputBuf)	
+		print "* Receive ->%s<- \n" % (inputBuf)
+
 	if(inputBuf == "?") :
 		ser.write("HELP : (D)ump, (L)ist, (V)alue, (Z)ero clinometer, (C)ompensate compass, (A)ltitude set, (G)eo north correction\n")
 				

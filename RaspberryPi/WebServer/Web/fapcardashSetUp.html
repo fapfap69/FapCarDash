@@ -4,39 +4,48 @@
 	<meta charset=utf-8>
 	<title>Fap Dash Home Page</title>
 	<link rel=stylesheet href=css/dashstyle.css type=text/css charset=utf-8>
+	<link type="text/css" href="css/ui-darkness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet">		
 	<script src="js/jquery-1.10.2.min.js"></script>
+	<script src="js/jquery-ui-1.10.3.custom.min.js"></script>
 
  	<script src="socket.io/socket.io.js"></script>
-
-	
 	<script type="text/javascript">
 	
 	var ParametersId = [];
 	var SocketIo;
 	
-	function loadParams() {
+	function socketHandlerInit() {
 		SocketIo = io.connect();
 		SocketIo.on('connect', function() {
-			
-			SocketIo.emit('getparams','setup');
-			console.log("make request");
-			return;
+				loadParams();
+				return;
 			});
 
 		SocketIo.on('parameters', function(data) {
 				var obj = JSON.parse(data);
-				var i, name, value;
+				var i, name, sValue, iValue;
 				var tag = "#";
 				var id;
 
 				for(i=0;i<obj.paramArray.length;i++) {
 					name = obj.paramArray[i].name;
-					value = obj.paramArray[i].value;
 					id = tag.concat(name)
-					$(id).text(value);
+					if(obj.paramArray[i].value == null) {
+						$(id).val(0);
+					} else if( isNaN(obj.paramArray[i].value) ) {
+						$(id).val(obj.paramArray[i].value);
+					} else {
+						$(id).val(parseInt(obj.paramArray[i].value));
+					}
 					ParametersId.push(name);
 				}
 			});
+		return;
+	}
+	
+	function loadParams() {
+		SocketIo.emit('getparams','setup');
+//		console.log("make request");
 		return;
 	}
 	
@@ -51,34 +60,89 @@
 			Param.name = ParametersId[i];
 			Param.value = $(id).val();
 			SocketIo.emit('setparam',JSON.stringify(Param));
-			console.log(">> Save param > %s := %s", Param.name, Param.value);
+//			console.log(">> Save param > %s := %s", Param.name, Param.value);
 			}
+		
+		var Param = new Object();
+		Param.name = 'clientCommand';
+		Param.value = 'arduino(A'+$('#BaseAltimeter').val()+')';
+		SocketIo.emit('setparam',JSON.stringify(Param));
+		return;
+
+		
 		return;
 	}
 
 	
 	function setRoll(increment) {
-		val = parseInt($("#AlarmRoll").text());
+		val = parseInt($("#AlarmRoll").val());
 		val = val + increment;
-		$("#AlarmRoll").text(val);
+		$("#AlarmRoll").val(val);
 		return;	
 	}
 	function setPitch(increment) {
-		val = parseInt($("#AlarmPitch").text());
+		val = parseInt($("#AlarmPitch").val());
 		val = val + increment;
-		$("#AlarmPitch").text(val);
+		$("#AlarmPitch").val(val);
 		return;	
 	}
 	function setQuota(increment) {
-		val = parseInt($("#BaseAltimeter").text());
+		val = parseInt($("#BaseAltimeter").val());
 		val = val + increment;
-		$("#BaseAltimeter").text(val);
+		$("#BaseAltimeter").val(val);
 		return;	
 	}
 	
-	</script>	
+	function setZeroClinometer() {
+		var Param = new Object();
+		Param.name = 'clientCommand';
+		Param.value = 'arduino(Z)';
+		SocketIo.emit('setparam',JSON.stringify(Param));
+		return;
+	}
+	</script>
+	<style>
+  		.group { zoom: 1 }
+	</style>
+  	<script>
+  		$(function() {
+    		$( "#Allsetup" )
+      			.accordion({
+        			heightStyle: "fill",
+        			header: "> div > h3"
+      			})
+      			.sortable({
+        			axis: "y",
+        			handle: "h3",
+        			stop: function( event, ui ) {
+          				ui.item.children( "h3" ).triggerHandler( "focusout" );
+        			}
+      			});
+  			
+ 			$( "button_p" )
+      			.button()
+      			.click(function( event ) {
+        			event.preventDefault();
+      			});
+      		$( "input" )
+      			.width('80px')
+      			.css("font-size", "23px")
+
+      		$( "#Meteo1Id, #Meteo2Id, #Meteo3Id, #Meteo4Id, #Meteo5Id" )
+      			.width('120px')
+      			.css("font-size", "23px")
+      		$( "#Meteo1Name, #Meteo2Name, #Meteo3Name, #Meteo4Name, #Meteo5Name" )
+      			.width('100px')
+      			.css("font-size", "23px")
+
+      		$( "td" )
+      			.attr('align','center')
+      			
+  			});
+	</script>
+	
 </head>
-<body class='fapdashSetup' onload='loadParams();'>
+<body class='fapdashSetup' onload='socketHandlerInit();'>
 
 	<aside id="menuHome" class="menuMain">
 		<button id="but1" class="menuButton" onclick="location.href='fapcardashHome.html'">Home</button>
@@ -89,64 +153,81 @@
 		<button id="but6" class="menuButton"></button>
 	</aside>		
 	<section id="dashSetUp" class="fapdashSetup">
-	
-    <table class='fapdashSetup'>
-        <tr>
-            <td ><P class='fapdashSetupL1'>CLINOMETER</P></td>
-            <td ><P class='fapdashSetupL2'>Roll alarm</button></td>
-            <td ><button id="MROLL" class="fapdashIncrButton" onclick="setRoll(-1);">-</button></td>
-            <td ><P id="AlarmRoll"  class='fapdashSetupVal'>23</P></td>
-            <td ><button id="PROLL" class="fapdashIncrButton" onclick="setRoll(+1);">+</button></td>
-
-            <td ><P class='fapdashSetupL2'>Pitch alarm</button></td>
-            <td ><button id="MPITCH" class="fapdashIncrButton" onclick="setPitch(-1);">-</button></td>
-            <td ><P id="AlarmPitch"  class='fapdashSetupVal'>23</P></td>
-            <td ><button id="PPITCH" class="fapdashIncrButton" onclick="setPitch(+1);">+</button></td>
-        </tr>
-        
-        <tr> 
-            <td ><P class='fapdashSetupL1'>CLINOMETER</P></td>
-        	 <td colspan="3"><button id="ZERO" class="fapdashButton" onclick="setZeroClinometer();">ZERO SET</button></td>
-		</tr>
-        <tr>
-            <td ><P class='fapdashSetupL1'>ALTIMETER</P></td>
-            <td ><P class='fapdashSetupL2'>Quota (mt)</P></td>
-            <td ><button id="MQUOTA" class="fapdashIncrButton" onclick="setQuota(-1);">-</button></td>
-            <td ><P id="BaseAltimeter"  class='fapdashSetupVal'>23</P></td>
-            <td ><button id="PQUOTA" class="fapdashIncrButton" onclick="setQuota(+1);">+</button></td>
-        </tr>
-
-		<tr>
-			<td><P class='fapdashSetupL1'>METEO</P></td>
-			<td><P class='fapdashSetupL2'>1st Locality</P></td>
-			<td colspan="3"><input id="Meteo1Name"></td>
-			<td colspan="3"><input id="Meteo1Id"></td>
-		</tr>
-		<tr>
-			<td><P class='fapdashSetupL1'></P></td>
-			<td><P class='fapdashSetupL2'>2nd Locality</P></td>
-			<td colspan="3"><input id="Meteo2Name"></td>
-			<td colspan="3"><input id="Meteo2Id"></td>
-		</tr>
-		<tr>
-			<td><P class='fapdashSetupL1'></P></td>
-			<td><P class='fapdashSetupL2'>3th Locality</P></td>
-			<td colspan="3"><input id="Meteo3Name"></td>
-			<td colspan="3"><input id="Meteo3Id"></td>
-		</tr>
-		<tr>
-			<td><P class='fapdashSetupL1'></P></td>
-			<td><P class='fapdashSetupL2'>4th Locality</P></td>
-			<td colspan="3"><input id="Meteo4Name"></td>
-			<td colspan="3"><input id="Meteo4Id"></td>
-		</tr>
-		<tr>
-			<td><P class='fapdashSetupL1'></P></td>
-			<td><P class='fapdashSetupL2'>5th Locality</P></td>
-			<td colspan="3"><input id="Meteo5Name"></td>
-			<td colspan="3"><input id="Meteo5Id"></td>
-		</tr>
-    </table>
+		<div id="Allsetup" style="height: 450px">
+			<div class="group">
+    			<h3>ARDUINO</h3>
+    			<div>
+					<table width=90% class='fapdashSetup'>
+        				<tr>
+				            <td ><P class='fapdashSetupL1'>Clinometer Roll alarm</P></td>
+            				<td ><button_p id="MROLL" onclick="setRoll(-1);">-</button_p></td>
+            				<td ><input id="AlarmRoll" ></input></td>
+            				<td ><button_p id="PROLL" onclick="setRoll(+1);">+</button_p></td>
+						</tr>
+						<tr>
+            				<td ><P class='fapdashSetupL1'>Clinometer Pitch alarm</P></td>
+            				<td ><button_p id="MPITCH" onclick="setPitch(-1);">-</button_p></td>
+            				<td ><input id="AlarmPitch" ></input></td>
+            				<td ><button_p id="PPITCH" onclick="setPitch(+1);">+</button_p></td>
+        				</tr>
+        				<tr> 
+            				<td ><P class='fapdashSetupL1'>Clinometer Zero set</P></td>
+        	 				<td colspan="3"><button_p id="ZERO" class="fapdashButton" onclick="setZeroClinometer();">SET</button_p></td>
+						</tr>
+        				<tr>
+            				<td ><P class='fapdashSetupL1'>Altimeter base Quota (mt)</P></td>
+            				<td ><button_p id="MQUOTA" onclick="setQuota(-1);">-</button_p></td>
+            				<td ><input id="BaseAltimeter" ></input></td>
+            				<td ><button_p id="PQUOTA" onclick="setQuota(+1);">+</button_p></td>
+        				</tr>
+					</table>
+				</div>
+			</div>
+			<div class="group">
+    			<h3>METEO</h3>
+    			<div>
+					<table width=90% class='fapdashSetup'>
+     					<tr>
+							<td><P class='fapdashSetupL1'>1st Locality</P></td>
+							<td ><input id="Meteo1Name"></td>
+							<td ><input id="Meteo1Id"></td>
+						</tr>
+     					<tr>
+							<td><P class='fapdashSetupL1'>2nd Locality</P></td>
+							<td ><input id="Meteo2Name"></td>
+							<td ><input id="Meteo2Id"></td>
+						</tr>
+     					<tr>
+							<td><P class='fapdashSetupL1'>3td Locality</P></td>
+							<td ><input id="Meteo3Name"></td>
+							<td ><input id="Meteo3Id"></td>
+						</tr>
+     					<tr>
+							<td><P class='fapdashSetupL1'>4th Locality</P></td>
+							<td ><input id="Meteo4Name"></td>
+							<td ><input id="Meteo4Id"></td>
+						</tr>
+     					<tr>
+							<td><P class='fapdashSetupL1'>5th Locality</P></td>
+							<td ><input id="Meteo5Name"></td>
+							<td ><input id="Meteo5Id"></td>
+						</tr>
+					</table>
+			    </div>
+			</div>
+  			<div class="group">
+				<h3>CALENDAR</h3>
+				<div>
+			    </div>
+  			</div>
+  			<div class="group">
+    			<h3>WIFI</h3>
+    			<div>
+			    </div>
+  			</div>
+		</div>
+ 
+   
    
     </section>
     

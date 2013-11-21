@@ -44,12 +44,12 @@ int isGpsd = true; // is the connection with the gpsd
 
 // --------  functions -----------------
 // The logger
-void fcdLog(char *msg) {
+void fcdLog(char *msg, char *msgb, int num) {
     time(&logTimer);
     logTm_info = localtime(&logTimer);
 	strftime(timeStamp, 25, "%d/%m/%Y %H:%M:%S", logTm_info);
 	if(FCD_DEBUG == 1)
-		fprintf( logFileHandler, "FCDcollector (%s) :: = %s\n",timeStamp,msg);
+		fprintf( logFileHandler, "FCD (%s)::= %s %s (%d) \n",timeStamp,msg,msgb,num);
 	return;
 }
 void fcdLogErr(char *msg, char *msgb) {
@@ -64,7 +64,7 @@ void fcdSplash(void) {
 	printf("---------------------\n");
 	printf("-   FapCarDash      -\n");
 	printf("- data collector    -\n");
-	printf("- ver.0.31 12/11/13 -\n");
+	printf("- ver.0.32 20/11/13 -\n");
 	printf("-    A.Franco       -\n");
 	printf("---------------------\n");
 	return;
@@ -74,7 +74,7 @@ void fcdSplash(void) {
 static void _fcdCBSignalHandler(int signum)
 {
     if (signum == SIGINT || signum == SIGQUIT) {
-    	fcdLog("Exiting, signal received"); //, signum));
+    	fcdLog("Exiting, signal received", "", signum);
     	bFlagRun = false;
 	} else {
    		fcdLogErr("Abort program, signal received.", "BREAK or KILL");
@@ -139,7 +139,7 @@ int arduinoWriteCommand(char *sCommand){
 			if (bytesW != commandLenght) { // there is an error
 				fcdLogErr("UART0 error sending command on TX line",sCommand);
 			} else {
-				fcdLog("UART0 send command on TX line");//,sCommand);
+				fcdLog("UART0 send command on TX line", sCommand, bytesW );
 				return(true);
 			}
 		}
@@ -166,24 +166,22 @@ int arduinoReceiveResponse(char *ptrOut) {
 
 		bytesRead = read(uart0_filestream, (void*)arduPtrRxBuff, lenOfBuffer);
 		if (bytesRead < 0)	{ // seems an error but ...
-			fcdLog("UART0 RX error");
+			fcdLog("UART0 RX error","Negative return",bytesRead);
 			return(false);
 		} else if (bytesRead == 0) {
 			//No data...
 		} else {
 			//Data received
-			fcdLog("UART0 RX receive bytes");
-			fcdLog((char *)(arduPtrRxBuff));
-
-			// Critichal : verify that the received string is '\n' terminated
+			// Critic : verify that the received string is '\n' terminated
 			if((char)(*(arduPtrRxBuff + bytesRead - 1)) == '\n') { // It is good
 				*(arduPtrRxBuff + bytesRead - 1) = '\0';  // convert it into a string
+				fcdLog("UART0 RX receive bytes", (char *)(arduPtrRxBuff), bytesRead);
 				strcpy(ptrOut, (char *)arduRxBuff);  // return the received string
 				arduPtrRxBuff = arduRxBuff;  // reset the read buffer pointer
 				return(true);
 			}
 			arduPtrRxBuff = arduPtrRxBuff + bytesRead + 1; // Move the pointer for the next chunk
-			fcdLog("UART0 RX receive incomplete string");
+			fcdLog("UART0 RX receive incomplete string","",0);
 		}
 	}
 	return(false);
@@ -284,7 +282,43 @@ int __recordParseValue(char **ptTok, const char *sName) {
     }
     return(RC_DATAVALID);
 }	 
-    
+
+// execute a command
+void __executeCommand(char *command) {
+	char to[20];
+	char com[20];
+	char rxBuffer[FCD_ARDU_RXBUFFERLEN];
+
+	int counter = 10;
+
+	sscanf (command,"%[^'('](%[^')'])",to,com); // parse the command ::= <device>(<command>)
+
+	if(strcmp(to,"arduino")==0){ // is a command for the arduino
+
+		fcdLog("Execute Arduino command :",com,0);
+		// flush the rx buffer
+		sleep( 1 );
+		arduinoReceiveResponse(rxBuffer);
+
+		// send the command
+		strcat(com,"\n");
+		arduinoWriteCommand(com);
+
+		// wait for the response max time out 10x0.5 sec
+		while (--counter > 0) {
+			usleep( 500000 );
+			if(arduinoReceiveResponse(rxBuffer)) {
+				fcdLog("Response from Arduino command :",rxBuffer,0);
+				counter = -1;
+			}
+		}
+
+		arduFSMState = FCD_ARDU_STATE_IDLE;
+	}
+	return;
+}
+
+
 // --------  GPSD interface functions -------------------
 
 // Open the stream with the GPSd socket
@@ -318,33 +352,24 @@ int gpsdCloseStream() {
 // This is the main polling function
 int GPScollectData() {
 
-	char timeStamp[30];
+	char buffer[128];
 	int readData;
-/*
- * if (!gps_waiting(gpsdata, timeout)) {
-	    return -1;
-	} else {
-	    (void)gps_read(gpsdata);
-	    (*hook)(gpsdata);
-	}
 
- */
-
-	if (gps_waiting(&gpsdata, 10000000)) {  // Are there data ?
+	if (gps_waiting(&gpsdata, 1000000)) {  // Are there data ?
 		readData = 0;
 		readData = gps_read(&gpsdata);
-		sprintf(timeStamp,"GPSD Read Data: %d",readData);
-		fcdLog(timeStamp);
         if (readData > 0) { // Read data
             if(gpsdata.online != 0) { // GPS not online
 	            if(gpsdata.status != STATUS_NO_FIX) { // We have a fix point
 					__recordStringValue("FIXED", "GPSstatus"); // set into DB
 				    // gpsdata.satellites_used
 					if( gpsdata.fix.mode ==  MODE_2D || gpsdata.fix.mode ==  MODE_3D) {
-						unix_to_iso8601(gpsdata.fix.time, timeStamp, sizeof(timeStamp));
-						__recordStringValue(timeStamp, "GPStime");
+						unix_to_iso8601(gpsdata.fix.time, buffer, sizeof(buffer));
+						__recordStringValue(buffer, "GPStime");
 						__recordFloatValue(gpsdata.fix.latitude, "GPSlatit");
 						__recordFloatValue(gpsdata.fix.longitude, "GPSlongi");
+						sprintf(buffer,"{\n\"time\": %f,\n\"lat\": %f,\n\"lon\": %f\n}",gpsdata.fix.time, gpsdata.fix.latitude, gpsdata.fix.longitude);
+						__recordStringValue(buffer, "GPSposition");
 					}
 					if( gpsdata.fix.mode ==  MODE_3D) {
 						__recordFloatValue(gpsdata.fix.altitude, "GPSaltit");
@@ -368,8 +393,8 @@ int GPScollectData() {
         	}
         }
     } else {
-		__recordStringValue("NODEVICE", "GPSstatus");
-		isGpsd = false;
+	//	__recordStringValue("NODATA", "GPSstatus");
+		isGpsd = true;
     }
 	return(RC_DATAVALID);
 }
@@ -409,7 +434,7 @@ int main(int argc, char **argv) {
 			break;
 		}
 	//--------
-	fcdLog("Start program ...");
+	fcdLog("Start program ...","",0);
 
     //   catch all interesting signals
     (void)signal(SIGKILL, _fcdCBSignalHandler);
@@ -467,6 +492,17 @@ int main(int argc, char **argv) {
 		lDelay = POLLING_DELAY_USEC - ((float)(tEndRead - tStartRread) / fClocsPerMicroSeconds);
 		if(lDelay > 0) usleep( lDelay );
 
+		// now poll for a command
+		reply = redisCommand(context,"GET clientCommand");
+		if(reply->str != 0) {
+			fcdLog("Poll the Redis DB for new command :",reply->str,0);
+			if(strcmp(reply->str, ".")!=0) {  // Is there a command
+				__executeCommand(reply->str);  // put the command to arduino
+				reply = redisCommand(context,"SET clientCommand %s","."); // free the command channel
+				// printf(">>>********>>> %d",arduFSMState);
+			}
+		}
+
 		// produce a heartbeat signal in order to flag the alive signal
 		reply = redisCommand(context,"SET clientHBcounter %d", iRunCounter++);
 
@@ -483,7 +519,7 @@ int main(int argc, char **argv) {
 	arduinoCloseStream();
 	gpsdCloseStream();
 
-	fcdLog("Bye bye !");
+	fcdLog("Bye bye !","",0);
 	if(logFileHandler != stdout) fclose(logFileHandler);
 	exit(0);
 }

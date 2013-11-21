@@ -16,6 +16,7 @@
 <item>Batt2A</item>
 <item>arduinoState</item>
 <item>GPSstatus</item>
+<item>GPSposition</item>
 <item>GPStime</item>
 <item>GPSlatit</item>
 <item>GPSlongi</item>

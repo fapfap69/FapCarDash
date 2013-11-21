@@ -44,7 +44,7 @@
 #define TIMEOUT_SEC 1
 #define TIMEOUT_USEC 500000
 
-#define POLLING_DELAY_USEC 5000000
+#define POLLING_DELAY_USEC 1000000
 
 
 typedef struct sensorMeasure {
@@ -92,9 +92,10 @@ int __recordIntValue(int, char *);
 int __recordFloatValue(float, char *);
 int __recordStringValue(char *, char *);
 int __recordParseValue(char **, const char *);
+void __executeCommand(char *);
 
 static void _fcdCBSignalHandler(int);
-void fcdLog(char *);
+void fcdLog(char *, char *, int);
 void fcdLogErr(char *, char *);
 void fcdSplash(void);
 

@@ -45,7 +45,7 @@
 	            			<canvas id=canvasCronom width=300 height=300></canvas>
 			            </td>
         			</tr>
-		    		<tr><td colspan=2 class="pt-table-canvas"><canvas id=canvasDate width=320 height=40>Date Time</canvas></td></tr>
+		    		<tr><td colspan=2 class="pt-table-canvas"><canvas id=canvasDate width=370 height=40>Date Time</canvas></td></tr>
     			</table>
     		</div>
 			<div class="pt-page pt-page-2">
@@ -161,27 +161,27 @@
 				<button id="but2" class="menuButton" ></button>
 				</aside>		
 			    <table class="pt-table">
-				    <tr><td colspan=2 class="pt-table-title">CLIMA 2</td></tr>
-				    <tr>
-            			<td  class="pt-table-canvas">
-            	    		<canvas id=canvasHigrometer width=300 height=300>No canvas in your browser...sorry...</canvas>
-			    	    </td>
-            			<td  class="pt-table-canvas">
-	            			<canvas id=canvasBarometer width=300 height=300></canvas>
-				        </td>
-    	    		</tr>
-		    		<tr><td colspan=2 class="pt-table-canvas"></td></tr>
+				    <tr><td colspan=2 class="pt-table-title">GLOBAL POSITIONING SYSTEM</td></tr>
+		    		<tr><td colspan=1 class="pt-table-canvas"><canvas id=gpsState width=320 height=40>GPSState</canvas></td>
+		    		<td colspan=1 class="pt-table-canvas"><canvas id=gpsTimeStamp width=320 height=40>GPSTimeStamp</canvas></td></tr>
+		    		<tr><td colspan=1 class="pt-table-canvas"><canvas id=gpsLatitude width=320 height=40>GPSLatitude</canvas></td>
+		    		<td colspan=1 class="pt-table-canvas"><canvas id=gpsLongitude width=320 height=40>GPSLongitude</canvas></td></tr>
+		    		<tr><td colspan=1 class="pt-table-canvas"><canvas id=gpsAltitude width=320 height=40>GPSAltitude</canvas></td><td></td></tr>
+		    		<tr><td colspan=1 class="pt-table-canvas"><canvas id=gpsSpeed width=320 height=40>GPSSpeed</canvas></td>
+		    		<td colspan=1 class="pt-table-canvas"><canvas id=gpsClimb width=320 height=40>GPSClimb</canvas></td></tr>
     			</table>
  			</div>
 		</div>
 		<div class="pt-message">
 			<p>Your browser does not support CSS animations.</p>
 		</div>
-
-		<script src="js/jquery.dlmenu.js"></script>
+		
+<script src="js/dashdatetime.js"></script>
 <script src="js/dashpagetransitions.js"></script>
 <script src="js/steelseries.js"></script>
 <script src="js/tween-min.js"></script>
+<script src="socket.io/socket.io.js"></script>
+
 
 <script>
 	var Roll;
@@ -199,6 +199,15 @@
 	var Watch;
 	var Cronometro;
 	var DateTime;
+	
+	
+	var GPSstate;
+	var GPStimestamp;
+	var GPSlongitude;
+	var GPSlatitude;
+	var GPSaltitude;
+	var GPSspeed;
+	var GPSclimb;
 	
 // build the controls ...
 function init(){
@@ -225,6 +234,7 @@ function init(){
 	// Initialzing gauges 
 	
 	// Date LCD display
+	var dt = new DateTime();
 	DateTime = new steelseries.DisplaySingle('canvasDate', {
 			lcdColor: steelseries.LcdColor.STANDARD,
 			lcdDecimals: 0,
@@ -234,7 +244,7 @@ function init(){
 			headerStringVisible: false,
 			digitalFont: false,
 			valuesNumeric: false,
-			value: 'Mercoledi 15 Luglio 1998',
+			value: dt.formats.constants.dayLong,
 			alwaysScroll: false,
 			autoScroll: false,
 			alignText: 'center',
@@ -514,6 +524,94 @@ function init(){
 		});
 	
 	
+    // gps section 
+    
+	GPSstate = new steelseries.DisplaySingle('gpsState', {
+			lcdColor: steelseries.LcdColor.STANDARD,
+			lcdDecimals: 0,
+			unitString: '',
+			unitStringVisible: false,
+			headerString: 'GPS state',
+			headerStringVisible: true,
+			valuesNumeric: false,
+			value: 'N.D.',
+			alignText: 'center',
+			section: null
+			});
+
+	GPStimestamp = new steelseries.DisplaySingle('gpsTimeStamp', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 0,
+		unitString: '',
+		unitStringVisible: false,
+		headerString: 'GPS time',
+		headerStringVisible: true,
+		valuesNumeric: false,
+		value: 'N.D.',
+		alignText: 'center',
+		section: null
+		});
+
+	GPSlatitude = new steelseries.DisplaySingle('gpsLatitude', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 6,
+		unitString: '',
+		unitStringVisible: false,
+		headerString: 'GPS latitude',
+		headerStringVisible: true,
+		valuesNumeric: true,
+		value: 0.000000,
+		section: null
+		});
+
+	GPSlongitude = new steelseries.DisplaySingle('gpsLongitude', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 6,
+		unitString: '',
+		unitStringVisible: false,
+		headerString: 'GPS longitude',
+		headerStringVisible: true,
+		valuesNumeric: true,
+		value: 0.000000,
+		section: null
+		});
+
+	GPSaltitude = new steelseries.DisplaySingle('gpsAltitude', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 0,
+		unitString: 'msl',
+		unitStringVisible: true,
+		headerString: 'GPS altitude',
+		headerStringVisible: true,
+		valuesNumeric: true,
+		value: 0,
+		section: null
+		});
+	
+	GPSspeed = new steelseries.DisplaySingle('gpsSpeed', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 2,
+		unitString: 'm/sec',
+		unitStringVisible: true,
+		headerString: 'GPS speed',
+		headerStringVisible: true,
+		valuesNumeric: true,
+		value: 0.00,
+		section: null
+		});
+	
+	GPSclimb = new steelseries.DisplaySingle('gpsClimb', {
+		lcdColor: steelseries.LcdColor.STANDARD,
+		lcdDecimals: 2,
+		unitString: 'm/sec',
+		unitStringVisible: true,
+		headerString: 'GPS climb',
+		headerStringVisible: true,
+		valuesNumeric: true,
+		value: 0.00,
+		section: null
+		});
+	
 	   /*	
 // --------------	
 		// Define some sections
@@ -663,8 +761,26 @@ function init(){
                              });
         
 */
+	// extablish the connection to obtain params
+	var SocketIo = io.connect();
+	SocketIo.on('connect', function() {
+		SocketIo.emit('getparams','setup');
+		return;
+	});
 
+	SocketIo.on('parameters', function(data) {
+		var obj = JSON.parse(data);
+		var i, name, value;
+		var tag = "#";
+		var id;
 
+		for(i=0;i<obj.paramArray.length;i++) {
+			name = obj.paramArray[i].name;
+			if(name == "AlarmPitch") Pitch.setThreshold (parseInt(obj.paramArray[i].value));
+			if(name == "AlarmRoll") Roll.setThreshold (parseInt(obj.paramArray[i].value));
+		}
+	});
+	
                             
 	}
 
@@ -685,7 +801,7 @@ function functionButton(num) {
 			//console.error(" found " + $page.attr( 'class' ) );
 			pageNumber = counter;
 		}
-	} );
+	});
 
 	if(pageNumber < 0) return;
 

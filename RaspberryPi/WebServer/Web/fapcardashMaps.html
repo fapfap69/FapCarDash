@@ -14,18 +14,9 @@
 	<script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
 	<script src="js/jquery.zweatherfeed.min.js" type="text/javascript"></script>	
  	<script src="socket.io/socket.io.js"></script>
-
-    <style type="text/css">
-      #basicMap {
-          width: 690px;
-          height: 456px;
-          position: absolute;
-          left: 111px;
-      }
-    </style>
-
     <script src="js/OpenLayers.js"></script>
     <script src="js/OpenStreetMap.js"></</script>
+
     
     <script type="text/javascript">	
 	/*  -------------------------------------------------------------------
@@ -34,190 +25,268 @@
 	*/
 	var SocketIo;
 
-	function loadParams() {
+	function loadParams(timeout) {
 		SocketIo = io.connect();
 		SocketIo.on('connect', function() {
 			SocketIo.emit('getparams','maps');   // after the socket connection make a parm request
 			return;
 			});
 
-		SocketIo.on('listofobjects', function(data) {   // as soon the server replays read the params
-			var obj = JSON.parse(data); 
-			var i, type, name, value, pos;
-						
-			for(i=0;i<obj.paramArray.length;i++) {  // for each param ...
-				var poi = new Object();
-				poi.name = obj.paramArray[i].name;
-				poi.lon = obj.paramArray[i].lon;
-				poi.lat = obj.paramArray[i].lat;
-				poi.type = obj.paramArray[i].type;
-				poi.descr = obj.paramArray[i].descr;
-				PointOfInterest.push(poi);
-				}
-			});			
-				
 		SocketIo.on('parameters', function(data) {   // as soon the server replays read the params
 			var obj = JSON.parse(data); 
 			var i, name, value, pos;
 				
 			for(i=0;i<obj.paramArray.length;i++) {  // for each param ...
 				if(obj.paramArray[i].name == "isFixed") {
-					actualPointerFix = obj.paramArray[i].value;
+					actualPointerFix = obj.paramArray[i].value == null ? false : obj.paramArray[i].value;
+					}
+				if(obj.paramArray[i].name == "pointsOfInterest") {
+					PointOfInterest = JSON.parse(obj.paramArray[i].value);
+					PointOfInterest = PointOfInterest == null ? new Array() : PointOfInterest;
+					__setAllPoiOnTheLayer();
 					}
 				}
-				// end of job...
-				SocketIo.disconnect();
 			});
+		return;
+	}
+	
+	function SavePOIparameter() {
+	//	SocketIo = io.connect();
+	//	SocketIo.on('connect', function() {
+			var param = new Object();
+			param.name = "pointsOfInterest";
+			param.value = JSON.stringify(PointOfInterest);
+			var jsonString = JSON.stringify(param);
+			SocketIo.emit('setparam',jsonString); 
+			// end of job...
+		//	SocketIo.disconnect();
+		//	});
 		
 		return;
 	}
     </script>
     
     <script>
-    	var map;
-    	var actualLongitude = 36.0;
-    	var actualLatitude = 49.0;
+    	var map;  // The Map
+    	var actualLongitude = 38.0;
+    	var actualLatitude = 41.0;
     	var actualZoom = 10;
 
-    	var actualPointerFix = true;
+    	var actualPointerFix = true;  // if true the map is in navigation mode
     	var PointOfInterest = [];  // list of object POI
-    	   	// ---
-    	// ---------
+   
+    	var baseLayers = ['Mapnik','CycleMap'];
+    	var selectedBaseLayer = 0;
     	
-        var bounds = new OpenLayers.Bounds(-130, -48, 179, 67).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:3857"));
+    	// var bounds = new OpenLayers.Bounds(-130, -48, 179, 67).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:3857"));
 
-        var map; //complex object of type OpenLayers.Map
-    	var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
-		var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+    	var WSGProj = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+		var MercatorProj   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
         
+		// global variables for the marker selection
+		var drawControls, selectControl, selectedFeature;
+		
+		// global variables for the tracker
+		var isTrackOn = false;
+     	var menuLevel = 1;
+		
+		// If there is an error 	
         OpenLayers.Util.onImageLoadError = function () {
-            this.src = "http://4umaps.eu/img/no_image.png";
+            this.src = "js/img/no_image.png";
         }
     	
-    	
+		// ----------------------------------------------------
+    	// Map e layers initiazation
     	function init() {
 
-        	loadParams();  // load the parameters
-
-		   	map = new OpenLayers.Map("basicMap" /*,  {
-                controls: [
+        	// Create a new map
+		   	map = new OpenLayers.Map("basicMap" ,{
+		   	    projection: WSGProj,
+		   	    displayProjection: WSGProj
+		   	});/* , {	
+		   		controls: [	new OpenLayers.Control.ScaleLine({ geodesic: true }) ],
+		   		units: 'm'
+		   		});
+		   	*/		
+  			/*controls: [
                     new OpenLayers.Control.Navigation(),
                     new OpenLayers.Control.PanZoomBar(),
-                //           new OpenLayers.Control.Permalink(),
+                    new OpenLayers.Control.Permalink(),
                     new OpenLayers.Control.ScaleLine({ geodesic: true })],
-                //  new OpenLayers.Control.Permalink('permalink'),
-                //  new OpenLayers.Control.MousePosition(),
-                //  new OpenLayers.Control.Attribution()],
-             //  maxExtent: bounds,
-             //  restrictedExtent: bounds,
-             //  maxResolution: 156543.0339,
-                 units: 'm',
-                 projection: toProjection,
-                 displayProjection: fromProjection  
-			}*/
-		   	);
-        	
-        	map.addControl(new OpenLayers.Control.LayerSwitcher());
-        	
-        	actualLongitude = 13.41;
-        	actualLatitude = 41.52;
-        	
-        	var position = new OpenLayers.LonLat(actualLongitude,actualLatitude).transform( fromProjection, toProjection);
-        	actualZoom = 15; 
-        	
-        	
-        	layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+                    new OpenLayers.Control.Permalink('permalink'),
+                    new OpenLayers.Control.MousePosition(),
+                    new OpenLayers.Control.Attribution()],
+               maxExtent: bounds,
+               restrictedExtent: bounds,
+               maxResolution: 156543.0339,
+               units: 'm',
+               projection: MercatorProj,
+               displayProjection: WSGProj  
+			*/        	
+        	// ---------  Buiod and add the base layers
+        	layerMapnik = new OpenLayers.Layer.OSM.Mapnik(baseLayers[0]);  // main 'Streets' layer
             layerMapnik.setOpacity(1);
             map.addLayer(layerMapnik); 
- 
-            layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+            layerCycleMap = new OpenLayers.Layer.OSM.CycleMap(baseLayers[1]);  // main 'Topographic' layer
             layerCycleMap.setOpacity(1);
             map.addLayer(layerCycleMap);
-			
+            selectedBaseLayer = 0
+            
+            // This is the layer that uses the locally stored tiles
+//            var additional = new OpenLayers.Layer.OSM("4UI", "tiles/${z}/${x}/${y}.png", {numZoomLevels: 16, alpha: true, isBaseLayer: true});
+//            map.addLayer(additional);
+                     
+	            
             // setup the actual postion and the markers of POI
-            positionsLayer = new OpenLayers.Layer.Vector("Positions");
+        	var position = new OpenLayers.LonLat(actualLongitude,actualLatitude).transform( WSGProj, MercatorProj);  // the actual position
+            positionsLayer = new OpenLayers.Layer.Vector("Positions");   // The layer that host the POI
+            
+            // Add the POI related to the actual position
             var positionVector = new OpenLayers.Geometry.Point(position.lon, position.lat);
-        	var positionFeature = new OpenLayers.Feature.Vector(positionVector, {name:'actualPosition'}, {externalGraphic: 'images/markerActualPos.png', graphicHeight: 20, graphicWidth: 16});
+        	var positionFeature = new OpenLayers.Feature.Vector(positionVector, {name:'actualPosition'}, {externalGraphic: 'js/img/marker.png', graphicHeight: 25, graphicWidth: 21});
         	positionsLayer.addFeatures(positionFeature);
-        	
-        	for(var i; i<PointOfInterest.length; i++) {
-                var positionVector = new OpenLayers.Geometry.Point(PointOfInterest[i].lon, PointOfInterest[i].lat);
-            	var poiFeature = new OpenLayers.Feature.Vector(positionVector, {name:PointOfInterest[i].name}, {externalGraphic: __getMarker(PointOfInterest[i].type), graphicHeight: 20, graphicWidth: 16});
-        		positionsLayer.addFeatures(poiFeature);
-        	}
         	map.addLayer(positionsLayer);
+  
+        	// Add the tracks layer
+      		tracksLayer = new OpenLayers.Layer.Vector("Tracks");//,  {style: trackLayerstyle} );   // The layer that host the POI
+            map.addLayer(tracksLayer);
+            map.addControl(new OpenLayers.Control.DrawFeature(tracksLayer, OpenLayers.Handler.Path));
+						
+			// Add controls to the map
+        	map.addControl(new OpenLayers.Control.LayerSwitcher());  // The layers switch control
+
+        	// The control to operate the selection of POI markers           
+            selectControl = new OpenLayers.Control.SelectFeature([positionsLayer],    // we have one control with two events
+                    {onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
+            drawControls = { select: selectControl };
+            map.addControl(drawControls['select']);    
+            selectControl.activate();
         	
-        	// Add the click control
+        	// The click control to operate the input of a new POI
         	var click = new OpenLayers.Control.Click();
             map.addControl(click);
             click.activate();
-        	
-        	
+
+            // Now is time to load parameters
+        	loadParams();  // load the parameters
+        	setMenu(menuLevel);
+            swithcMapLayer(0);
+     	
+            // Finally center the map on the actiual position
           	map.setCenter(position, actualZoom );
+          	return;
       	}
       
+ 		function __setAllPoiOnTheLayer() {
+        	// and Add all the POI contained into the Array PointOfInterest catched from the DB
+	       	for(var i=0; i<PointOfInterest.length; i++) {
+	       		__setOnePoiOnTheLayer(PointOfInterest[i]);
+        	}
+ 			return;
+ 		}
+
+ 		function __setOnePoiOnTheLayer(POIobj) {
+ 			// First we convert the coordinates
+     		var position = new OpenLayers.LonLat(POIobj.lon,POIobj.lat).transform( WSGProj, MercatorProj);
+ 	        var poiLayer = map.getLayersByName("Positions");  // get the POI layer 
+ 	        var positionVector = new OpenLayers.Geometry.Point(position.lon, position.lat); // set the marker position
+ 			var poiFeature = new OpenLayers.Feature.Vector(positionVector, {id: POIobj.id ,name: POIobj.name}, {externalGraphic: __getMarker(POIobj.type), graphicHeight: 25, graphicWidth: 21}); // create the marker
+ 			poiFeature.createPopup();  // add a popup object to the Marker
+ 	    	poiLayer[0].addFeatures(poiFeature); // add the marker to the layer			
+ 	    	return;
+ 		}
+
+ 		
+		// internal functions --------------------------
+		// convert the POI type into an icon file
         function __getMarker(type) {
         	switch(type) {
         	case "1":
-        		return('images/markerPosType1.png');
+        		return('js/img/marker-red.png');
         		break;
         	case "2":
-        		return('images/markerPosType2.png');
+        		return('js/img/marker-blue.png');
         		break;
         	case "3":
-        		return('images/markerPosType3.png');
+        		return('js/img/marker-gold.png');
+        		break;
+        	case "4":
+        		return('js/img/marker-green.png');
         		break;
         	}
-    		return('images/markerPosType1.png');
+    		return('js/img/marker-green.png');
         }
-               
-        
+        // update the 'actual position' 
       	function updatePosition(longitude, latitude) {
       		actualLongitude = longitude;
       		actualLatitude = latitude;
-      		var theLayer = map.getLayersByName("Positions")[0];
-      		var newPosition = new OpenLayers.LonLat(actualLongitude,actualLatitude).transform( fromProjection, toProjection);
-	        var feature = theLayer.getFeaturesByAttribute('name', 'actualPosition')[0];
-	        feature.move(newPosition);
-	        if(actualPointerFix) map.setCenter(newPosition);
+      		var theLayer = map.getLayersByName("Positions")[0];  // get the layer pointer
+      		var newPosition = new OpenLayers.LonLat(actualLongitude,actualLatitude).transform( WSGProj, MercatorProj);
+	        var feature = theLayer.getFeaturesByAttribute('name', 'actualPosition')[0];  // Get the id of the marker
+	        feature.move(newPosition);  // move the marker in a new position
+	        if(actualPointerFix) map.setCenter(newPosition);  // if the visulization is fixed, recenter the map on the actual position
+	        
+	        if(isTrackOn) {
+	        	__addPointToTrack(newPosition);
+	        }
+	        
+	        
     	    return;
-    	  
-      	}
-      	function newLatitude(lat){
-      		updatePosition(actualLongitude, lat);
-      		return;
-      	}
-      	function newLongitude(lon) {
-      		updatePosition(lon, actualLatitude);
-      		return;
-      	}
-      	
-     	function swithcMapLayer(type) {
-     		var thelayer;
-     		switch(type) {
-     		case 1:
-     			thelayer = "Mapnik"; 
-     			break;
-     		case 2:
-     			thelayer = "CycleMap";
-     			break;
-     		}
-    		var thenewbase = map.getLayersByName(thelayer)[0];
-     		map.setBaseLayer(thenewbase);
-     		map.baseLayer.setVisibility(true);
-     		return;
       	}
    
+        // Exported Functions --------------------------
+        // Change the actual Latitude
+      	function newLatitude(lat){
+      		updatePosition(actualLongitude, parseFloat(lat));
+      		return;
+      	}
+        // Change the actual Longitude
+      	function newLongitude(lon) {
+      		updatePosition(parseFloat(lon), actualLatitude);
+      		return;
+      	}
+        // Change the actual position
+        function newPosition(unixTime,lon,lat) {
+      		updatePosition(parseFloat(lon), parseFloat(lat));
+      		return;
+        }
+        
+        // Ask to center tha map on the actual position
+		function centerMap() {
+//			var newCenter = ;
+	        map.setCenter(new OpenLayers.LonLat(actualLongitude,actualLatitude).transform( WSGProj, MercatorProj));  
+	        return;
+		}
+        // switch different types of maps
+     	function swithcMapLayer(increment) {
+     		selectedBaseLayer += increment;
+     		if(selectedBaseLayer>=baseLayers.length) selectedBaseLayer = 0;
+     		else if(selectedBaseLayer < 0) selectedBaseLayer = baseLayers.length-1;
+     		var thelayer = baseLayers[selectedBaseLayer];
+     		var thenewbase = map.getLayersByName(thelayer)[0]; // get the id of the selected layer
+     		map.setBaseLayer(thenewbase);
+     		map.baseLayer.setVisibility(true); // switch on 
+     		return;
+      	}
+
+        // ------------------------------------------------
+        // POI management
+     	// ------------------------------------------------
+     	
      	// control for the POI management
+     	var POIpopup;  // The popup object for the POI
+        
+        // Define the manager of events on the map
      	OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
-			defaultHandlerOptions: {
+			defaultHandlerOptions: {  // for the moment just set the click event...
             	'single': true,
                 'double': false,
                 'pixelTolerance': 0,
                 'stopSingle': false,
                 'stopDouble': false
-            	},
+            },
 
+            // general initialization
             initialize: function(options) {
                 this.handlerOptions = OpenLayers.Util.extend(
                 	{}, this.defaultHandlerOptions
@@ -227,30 +296,288 @@
                     ); 
                 this.handler = new OpenLayers.Handler.Click(
                     this, {
-                    	'click': this.trigger
+                    	'click': this.trigger   // the function called on click
                         }, this.handlerOptions
                     );
-                }, 
+            }, 
 
+            // the click event open a popup frame for inser a new POI
 			trigger: function(e) {
-            	var lonlat = map.getLonLatFromPixel(e.xy);
-                alert("You clicked near " + lonlat.lat + " N, " + lonlat.lon + " E");
+				var lonlat = map.getLonLatFromPixel(e.xy); // get the map coordinate from the pixel
+				var coordinates = map.getLonLatFromPixel(e.xy);  // get a copy in order to have Mercato coordinats
+				coordinates.transform(new OpenLayers.Projection("EPSG:900913"), new OpenLayers.Projection("EPSG:4326")); // transform the coordinates into Mercator
+
+				if(POIpopup == null || POIpopup.map == null) { // if an other popup is open skip ...
+					POIpopup = new OpenLayers.Popup("NewPOI",   // create the POIpupup object
+						new OpenLayers.LonLat( map.center.lon /2 + map.getExtent().left/2 , map.center.lat/2 + map.getExtent().top/2),	 // set the position at the center of map in order to insure the readbility
+						new OpenLayers.Size(330,190),
+        		    	"<div class='fapcardashMapsPopup'><h4 class='fapcardashMapsPopup'>Insert a new Point of Interest</h4>"+   // the HTML inside the popup, the form exit with the __popupExit function
+        		        	"<label class='fapcardashMapsPopup'>Longitude:</label><label id='poiLon' class='fapcardashMapsPopup'>"+coordinates.lon+"</label>"+
+							"<label class='fapcardashMapsPopup'>  Latitude:</label><label id='poiLat' class='fapcardashMapsPopup'>"+coordinates.lat+"</label><BR>"+
+        		        	"<label class='fapcardashMapsPopup'>Name :</label><INPUT id='poiName' class='fapcardashMapsPopup' type='text' size=35><BR>"+
+        		       	   	"<label class='fapcardashMapsPopup'>Type :</label><select  class='fapcardashMapsPopup' id='poiType' >"+
+        		        	"<option value='1'>Red Markers</option><option value='2'>Blue Markers</option><option value='3'>Gold Markers</option>"+
+        		        	"<option value='4'>Green Markers</option></select><BR>"+
+        		        	"<button class='fapcardashMapsPopup' onclick='__popupExit(false,0,0);'>Cancel</button><button class='fapcardashMapsPopup' onclick='__popupExit(true,"+lonlat.lon+","+lonlat.lat+");'>Confirm</button></div>",
+        		   		false
+						);
+					POIpopup.padding = new OpenLayers.Bounds(-0,0,-30,-30);  // this in order to remove the right/bottom white border
+					map.addPopup(POIpopup);  // add the popup to the map
                 }
-            });
-     	
-     	
-    </script>
+			}
+     	});
+
+     	// function called every time a new POI is setted
+		function __popupExit(value, maplon, maplat ) {   // value true := insert the POI
+			if(value == true) {
+				var lon = $('#poiLon').text();  // Mercator longitude
+				var lat = $('#poiLat').text();  // Mercator latitude
+				var poiName = $('#poiName').val();  // the name of POI
+				var type = $('#poiType').val();  // The type (the colour of the marker)
+				var poiId = "P" + lon + lat;  // build a unique id
+				
+	        	// Then we add e POI object to the array... in a new version we arrange extra info into the feature object
+	        	var poi = new Object();  // create and set the POI object
+	    		poi.lon = lon;
+	    		poi.lat = lat;
+	    		poi.id = poiId;
+	    		poi.name = poiName;
+	    		poi.type = type;
+	    		PointOfInterest.push(poi); // insert the object into the array	    		
+	    		__setOnePoiOnTheLayer(poi); // Put the marker on the map
+	    		SavePOIparameter();  // stores the POI array into the DB
+			}
+			map.removePopup(POIpopup);  // remove the popup
+			//POIpopup.destroy();
+            return;
+        }
+
+		// The call back functions linked to the click on marker event 
+        function onFeatureSelect(feature) {
+        	selectedFeature = feature;
+        	var coordinates = new OpenLayers.LonLat(feature.geometry.getBounds().getCenterLonLat().lon,feature.geometry.getBounds().getCenterLonLat().lat); // get the map coordinates of the marker
+        	coordinates.transform(new OpenLayers.Projection("EPSG:900913"), new OpenLayers.Projection("EPSG:4326")); // transform it into mercator projection
+            POIpopup = new OpenLayers.Popup("NewPOI", //  create the popup object
+            			feature.geometry.getBounds().getCenterLonLat(),  // The map position of the marker
+                        new OpenLayers.Size(320,160),
+                        "<div class='fapcardashMapsPopup'><H4 class='fapcardashMapsPopup'>" + feature.attributes['name']+"</H4><br>"+  // the HTML contents of the popup 
+                        	"<label class='fapcardashMapsPopup'>Latitude  : " + parseFloat(coordinates.lat).toFixed(6)+"</label><br>"+
+                            "<label class='fapcardashMapsPopup'>Longitude : " + parseFloat(coordinates.lon).toFixed(6)+"</label><br>"+
+                            "<button class='fapcardashMapsPopup' onclick='__popupPOIExit(false);'>Close</button></div>",
+                        false);
+            POIpopup.padding = new OpenLayers.Bounds(-0,0,-30,-30); // this in order to remove the right/bottom white border
+            feature.popup = POIpopup; // assign the popup object to the marker
+            map.addPopup(POIpopup); // add (display) the popup
+        }
+		
+        function onFeatureUnselect(feature) {
+			// ignore the unselect
+        }
+        
+		function __popupPOIExit(value) {  // Close the popup if value := true then remove the POI 
+            map.removePopup(selectedFeature.popup);  // close the popup
+            selectedFeature.popup.destroy(); // remove the popup from the marker
+            selectedFeature.popup = null;
+ 			return;
+		}
+	    </script>
+	    <script>
+	    
+	    // Open a popup in o
+	    function showPOIlist() {
+
+	    	// Build the HTML 
+	    	var htmlString = "<div class='fapcardashMapsPopup'><table class='fapcardashMapsPopup'><tr><td width=90% colspan=3><H4 class='fapcardashMapsPopup'>Points of interest</H4></td><td><button style='width: 80px;' onclick='__closePOIList();' class='fapcardashMapsPopup'>CLOSE</button></td></tr></table>";
+	    	htmlString += "<div class='fapcardashMapsPOItbl'><table class='fapcardashMapsPopup'>";
+	    	for (var i=0; i<PointOfInterest.length; i++){
+	    		var lon = parseFloat(PointOfInterest[i].lon).toFixed(6);
+	    		var lat = parseFloat(PointOfInterest[i].lat).toFixed(6);
+	    		htmlString += "<tr><td><a onclick='__goToPOI("+i+");'><img src='"+__getMarker(PointOfInterest[i].type)+"'></a></td><td width=350px >"+PointOfInterest[i].name+"</td>"+
+	    				"<td width=80px>"+lat+"</td><td width=80px>"+ lon+"</td><td><button class='fapcardashMapsPOIremovebut' onclick= '__removePOI(\""+PointOfInterest[i].id+"\");'>X</button></td></tr>";
+	    	}
+	    	htmlString += "</table></div></div>";
+	    	// calculate the position
+	    	var popPosPix = new OpenLayers.Pixel(40, 30);
+			var popPosCoo = map.getLonLatFromPixel(popPosPix);
+
+	    	POIListpopup = new OpenLayers.Popup("NewPOI", //  create the popup object
+	    			popPosCoo,
+	    			new OpenLayers.Size(630,390),
+					htmlString,
+                    false);
+	    	POIListpopup.padding = new OpenLayers.Bounds(-0,0,-30,-30); // this in order to remove the right/bottom white border
+	        map.addPopup(POIListpopup); // add (display) the popup
+	    }    
+	    
+	    function __goToPOI(index) {
+	    	var position = new OpenLayers.LonLat(PointOfInterest[index].lon,PointOfInterest[index].lat).transform( WSGProj, MercatorProj);
+	    	map.setCenter(position, actualZoom );
+            map.removePopup(POIListpopup);  // close the popup
+          	return;
+		}
+	    
+	    function __closePOIList(){
+            map.removePopup(POIListpopup);  // close the popup
+	    	return;
+	   	}
+	    
+	    function __removePOI(id) {
+
+			// remove from layer
+            var poiLayer = map.getLayersByName("Positions");  // get the POI layer
+            var feature = poiLayer[0].getFeaturesByAttribute('id',id);
+			poiLayer[0].removeFeatures(feature[0]);
+			poiLayer[0].destroyFeatures(feature[0]);
+			
+        	// Then remove the POI object to the array... in a new version we don't have the array to delete
+ 		   	var index = -1;
+			for(var i = 0, len = PointOfInterest.length; i < len; i++) {
+   				if (PointOfInterest[i].id === id) {
+			        index = i;
+        			break;
+    			}
+			}
+			if (index > -1) {
+				PointOfInterest.splice(index, 1);
+	    		SavePOIparameter();  // stores the POI array into the DB
+			}
+			__closePOIList();
+			showPOIlist();
+	    	return;	
+	    }
+	    
+	    
+	    // ------------------------------------------------
+        // TRACKS management
+     	// ------------------------------------------------
+		
+     	function startTracking() {
+     		if(!isTrackOn) {
+	  			__createTrack();
+  				isTrackOn = true;  			
+     		}
+	    }
+	    function stopTracking() {
+	    	if(isTrackOn) {
+		    	isTrackOn = false;
+	    		__removeTrack();
+	    	}
+	    }
+	
+		function __addPointToTrack(point) {
+			var trkLayer = map.getLayersByName("Tracks");  // get the Tracks layer 
+	        var trkFeature = trkLayer[0].getFeaturesByAttribute('id','actualTrack');
+			trkFeature[0].geometry.addPoint(new OpenLayers.Geometry.Point(point.lon,point.lat));
+			trkLayer[0].redraw();
+	 		return;
+		}
+		function __createTrack() {
+        	var trackStyle = {
+			    	strokeColor: "#000080",
+			        strokeWidth: 3,
+			        strokeOpacity: 0.5,
+			      //  strokeDashstyle: "continous",
+			        pointRadius: 6,
+			      //  pointerEvents: "visiblePainted"
+			    };
+			
+			var pointList = [];
+			pointList.push(new OpenLayers.Geometry.Point(actualLongitude,actualLatitude).transform( WSGProj, MercatorProj));
+			pointList.push(new OpenLayers.Geometry.Point(actualLongitude,actualLatitude).transform( WSGProj, MercatorProj));
+            var trackLineString = new OpenLayers.Geometry.LineString(pointList);
+            var trackFeature = new OpenLayers.Feature.Vector( trackLineString ,{id: 'actualTrack'} ,trackStyle);
+			var trkLayer = map.getLayersByName("Tracks");  // get the Tracks layer 
+			trkLayer[0].addFeatures([trackFeature]);
+			trkLayer[0].redraw();
+			return;
+		}
+/*	    function __saveTrack() {
+	    	// ask for the name 
+	    	var TrackName = "pippo";
+	    	
+	    	// get the points
+			var trkLayer = map.getLayersByName("Tracks");  // get the Tracks layer 
+	        var trkFeature = trkLayer[0].getFeaturesByAttribute('id','actualTrack');
+			var ele = trkFeature[0].geometry.getVertices();
+			var coords = [];
+			var point = new OpenLayers.LonLat();
+			for (var i=0, n=ele.length; i<n; i++) {
+				point.lon = ele[i].x;
+				point.lat = ele[i].y;
+				point.transform(MercatorProj, WSGProj);
+				coords.push({lon: point.lon.toFixed(6), lat: point.lat.toFixed(6) });
+			}
+			var jsonString = new JSON.stringify({name: TrackName, len: coords.length, points: coords });
+			SocketIo.emit('storetrack',jsonString); 
+
+	    	return;
+	    }
+*/
+		function __removeTrack() {
+			var trkLayer = map.getLayersByName("Tracks");  // get the Tracks layer 
+	        var trkFeature = trkLayer[0].getFeaturesByAttribute('id','actualTrack');
+	        trkFeature[0].geometry.destroy();
+			trkFeature[0].destroy();
+			trkLayer[0].redraw();
+			return;
+		}
+		
+	    </script>
+	    
+	    
+	    <script>    
+	    function clickMenu(button){
+	    	switch(button){
+	    	case 1:
+	    		if(menuLevel==1) swithcMapLayer(1); else startTracking(); 
+	    		break;
+	    	case 2:
+	    		if(menuLevel==1) showPOIlist(); else stopTracking();
+	    		break;
+	    	case 3:
+	    		if(menuLevel==1) centerMap();
+	    		break;
+	    	case 4:
+	    		if(menuLevel==1) setMenu(2);
+	    		break;
+	    	case 5:
+	    		if(menuLevel==2) setMenu(1);
+	    		break;
+	    	}
+	    }
+		function setMenu(level) {
+			menuLevel = level;
+	    	switch(level){
+	    	case 1:
+	    		$('#fun1').text("MAPS");
+	    		$('#fun2').text("POI");
+	    		$('#fun3').text("ACTUAL");
+				$('#fun4').text("TRACK");
+				$('#but2').text("");
+				break;	    		
+	    	case 2:
+	    		$('#fun1').text("START");
+	    		$('#fun2').text("STOP");
+	    		$('#fun3').text("");
+				$('#fun4').text("");
+				$('#but2').text("BACK");
+				break;	    		
+	    	}
+	    }
+	    </script>
+  
+  
   </head>
   <body onload="init();">
  	<aside id="menuHome" class="menuMain">
 		<button id="but1" class="menuButton" onclick="location.href='fapcardashHome.html'">Home</button>
-		<button id="fun1" class="menuButton" onclick="swithcMapLayer(1)">Street</button>
-		<button id="fun2" class="menuButton" onclick="swithcMapLayer(2)">Topogr.</button>
-		<button id="fun3" class="menuButton" ></button>
-		<button id="fun4" class="menuButton" ></button>
-		<button id="but2" class="menuButton" ></button>
+		<button id="fun1" class="menuButton" onclick='clickMenu(1);'></button>
+		<button id="fun2" class="menuButton" onclick='clickMenu(2);'></button>
+		<button id="fun3" class="menuButton" onclick='clickMenu(3);'></button>
+		<button id="fun4" class="menuButton" onclick='clickMenu(4);'></button>
+		<button id="but2" class="menuButton" onclick='clickMenu(5);'></button>
 	</aside>
- 
     <div id="basicMap"></div>
   </body>
 </html>
+

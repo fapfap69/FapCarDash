@@ -13,8 +13,12 @@
 		<link rel="stylesheet" type="text/css" href="css/dashdefault.css" />
 		<link rel="stylesheet" type="text/css" href="css/dashcomponent.css" />
 		<link rel="stylesheet" type="text/css" href="css/dashanimations.css" />
-		<script src="js/modernizr.custom.js"></script>
+		
+		<link type="text/css" href="css/ui-darkness/jquery-ui-1.10.3.custom.min.css" rel="stylesheet">
 		<script src="js/jquery-1.10.2.min.js"></script>
+		<script src="js/jquery-ui-1.10.3.custom.min.js"></script>
+		
+		<script src="js/modernizr.custom.js"></script>
  		<script src="socket.io/socket.io.js"></script>
       
 		<script type="text/javascript">
@@ -22,6 +26,7 @@
 			var socket = io.connect();//, {'transports' : ['jsonp-polling']});
 			
 			socket.on('connect', function() {
+				socket.emit('subscribe','all');   // after the socket connection make a subscribe request
 				// enable all the buttons console.log(">>>> connected");
 				var color = "Yellow";
 				var elem;
@@ -64,55 +69,63 @@
 //	  			console.log(">>>>> obj  %",jsonstring);
 				switch(obj.channel) {
 				case "Temp1":
-			//		if(document.getElementById('dashFrame').location.pathname == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Termometer1) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Termometer1.setValueAnimated(obj.message);
+					}
 					break;
 				case "Temp2":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Termometer2) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Termometer2.setValueAnimated(obj.message);
+					}
 					break;
 				case "Humid":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Higrometer) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Higrometer.setValueAnimated(obj.message);
+					}
 					break;
 				case "Pressure":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Barometer) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Barometer.setValueAnimated(obj.message);
+					}
 					break;
 				case "Altitude":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Altimeter) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Altimeter.setValueAnimated(obj.message);
+					}
 					break;
 				case "Compass":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")	
+					if(typeof(document.getElementById('dashFrame').contentWindow.Compass) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Compass.setValueAnimated(obj.message);
+					}
 					break;
 				case "GeoNorth":
 			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
 				//		document.getElementById('dashFrame').contentWindow.Compass2.setValueAnimated(obj.message);
 					break;
 				case "Roll":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Roll) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Roll.setValueAnimated(obj.message);
+					}
 					break;
 				case "Pitch":
-			//		if(document.getElementById('dashFrame').src == "fapcardashInstr.html")
+					if(typeof(document.getElementById('dashFrame').contentWindow.Pitch) != "undefined") {
 						document.getElementById('dashFrame').contentWindow.Pitch.setValueAnimated(obj.message);
+					}
 					break;
 
 					
 				case "arduinoState":
 					var elem = document.getElementById("IOstate");
-					var color = "Gray";
+					var color = "#A0A0A0";
 					switch(obj.message) {
 					case "OK":
-						color = "Green";
+						color = "#00FF00";
 						break;
 					case "NO LINK":
-						color = "Yellow";
+						color = "#FFFF00";
 						break;
 					case "ERROR":
-						color = "Red";
+						color = "#FF0000";
 						break;
 					}
 					elem.style.color = color;
@@ -120,43 +133,84 @@
 
 				case "GPSstatus":
 					var elem = document.getElementById("GPSstate");
-					var color = "Gray";
+					var color = "#A0A0A0";
 					switch(obj.message) {
 					case "LINK":
-						color = "Blue";
+						color = "#0000FF";
 						break;
 					case "NO LINK":
-						color = "Red";
+						color = "#FF0000";
 						break;
 					case "FIXED":
-						color = "Green";
+						color = "#00FF00";
 						break;
 					case "FIXING":
-						color = "Blue";
+						color = "#0000FF";
 						break;
 					case "OFFLINE":
-						color = "Yellow";
+						color = "#FFFF00";
 						break;
 					case "NODATA":
-						color = "Orange";
+						color = "#FF8000";
 						break;
 					case "NODEVICE":
-						color = "Gray";
+						color = "#A0A0A0";
 						break;
 					}
 					elem.style.color = color;
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSstate) != "undefined") {
+						document.getElementById('dashFrame').contentWindow.GPSstate.setValue(obj.message);
+					}
+
 					break;
 					
 					
+				case "GPSposition":
+					var gpspos = new Object();
+					gpspos = JSON.parse(obj.message);
+					if (typeof(document.getElementById('dashFrame').contentWindow.newPosition) != "undefined") { 
+						document.getElementById('dashFrame').contentWindow.newPosition(gpspos.time,gpspos.lon,gpspos.lat);
+					}
+					break;
+					
+				case "GPStime":
+					if (typeof(document.getElementById('dashFrame').contentWindow.GPStimestamp) != "undefined") { 
+						document.getElementById('dashFrame').contentWindow.GPStimestamp.setValue(obj.message);
+					}
+					break;
+					
 				case "GPSlatit":
-					document.getElementById('dashFrame').contentWindow.newLatitude(obj.message);
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSlatitude) != "undefined") {
+						var f = parseFloat(obj.message);
+						document.getElementById('dashFrame').contentWindow.GPSlatitude.setValue(f);
+					}
 					break;
 					
 				case "GPSlongi":
-					document.getElementById('dashFrame').contentWindow.newLongitude(obj.message);
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSlongitude) != "undefined") {
+						var f = parseFloat(obj.message);
+						document.getElementById('dashFrame').contentWindow.GPSlongitude.setValue(f);
+					}
 					break;
 					
-
+				case "GPSalti":
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSaltitude) != "undefined") {
+						var f = parseFloat(obj.message);
+						document.getElementById('dashFrame').contentWindow.GPSaltitude.setValue(f);
+					}
+					break;
+				case "GPSspeed":
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSspeed) != "undefined") {
+						var f = parseFloat(obj.message);
+						document.getElementById('dashFrame').contentWindow.GPSspeed.setValue(f);
+					}
+					break;
+				case "GPSclimb":
+					if(typeof(document.getElementById('dashFrame').contentWindow.GPSclimb) != "undefined") {
+						var f = parseFloat(obj.message);
+						document.getElementById('dashFrame').contentWindow.GPSclimb.setValue(f);
+					}
+					break;
 					
 					
 					
@@ -201,15 +255,42 @@
 			
 			
 		</script>
+		
+		<script>
+			$(function() {
+			    $( "button:first" ).button({
+      				icons: {
+				        primary: "ui-icon-signal-diag"
+      				}
+			    }).next().button({
+      				icons: {
+        				primary: "ui-icon-gear"
+      				}
+			    }).next().button({
+      				icons: {
+        				primary: "ui-icon-signal"
+        			}
+			    }).next().button({
+      				icons: {
+        				primary: "ui-icon-signal"
+        			}
+        		}).next().button({
+      				icons: {
+        				primary: "ui-icon-transferthick-e-w"
+        			}
+			    });
+  			});
+		</script>
+		
 	</head>
 
 	<body id="bodyHome" class="bodyMain" onload=init()>
 		<header id="headerHome" class="headerMain">
-			<button id="GPSstate" class="headerIcon">GPS</button>
-			<button id="ODBIIstate" class="headerIcon">ODBII</button>
-			<button id="WIFIstate" class="headerIcon">WIFI</button>
-			<button id="GSMstate" class="headerIcon">GSM</button>
-			<button id="IOstate" class="headerIcon">I/O</button>
+			<button id="GPSstate" style="font-size: 11px; font-weight: normal;">GPS</button>
+			<button id="ODBIIstate" style="font-size: 11px; font-weight: normal;">ODBII</button>
+			<button id="WIFIstate" style="font-size: 11px; font-weight: normal;">WIFI</button>
+			<button id="GSMstate" style="font-size: 11px; font-weight: normal;">GSM</button>
+			<button id="IOstate" style="font-size: 11px; font-weight: normal;">I/O</button>
 		</heder>
 		<section id="dashFrameSection">
 			<iframe id="dashFrame" class="dashFrame" onLoad="frameDidLoad();"></iframe>			
